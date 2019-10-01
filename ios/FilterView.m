@@ -20,11 +20,13 @@
     UIImage *image;
     UIImage *editImage;
     UIImage *fullsizeImage;
+    UIImage *thumbnailImage;
+
     UIImageView *imageView;
     UITextView *textView;
     
     CIImage * editImageCGImage;
-    
+     CIImage * editThumbCGImage;
     
     EAGLContext *_eaglContext;
     CIContext *_cictx;
@@ -34,15 +36,19 @@
     CALayer *filterLayer;
     
     CGRect RectImageView;
-    CGRect RectTextView;
     CGRect glkViewRect;
-    CGRect controllerViewRect;
     
     NSNumber *inputSaturation;
     NSNumber *inputBrightness;
     NSNumber *inputContrast;
     
+    
+    NSArray *CIFilterNames;
+    NSArray *filterNames;
+
+    
 }
+
 
 
 - (instancetype)init
@@ -51,6 +57,26 @@
         inputSaturation = @1;
         inputBrightness = @0;
         inputContrast = @1;
+        CIFilterNames = @[
+                        @"CIPhotoEffectChrome",
+                        @"CIPhotoEffectFade",
+                        @"CIPhotoEffectInstant",
+                        @"CIPhotoEffectNoir",
+                        @"CIPhotoEffectProcess",
+                        @"CIPhotoEffectTonal",
+                        @"CIPhotoEffectTransfer",
+                        @"CISepiaTone"
+                        ];
+       filterNames = @[
+                          @"Chrome",
+                          @"Fade",
+                          @"Instant",
+                          @"Noir",
+                          @"Process",
+                          @"Tonal",
+                          @"Transfer",
+                          @"Sepia"
+                          ];
     }
     
     return self;
@@ -59,9 +85,7 @@
 -(void)calculateRects
 {
     self->RectImageView = CGRectMake(0, 0, self.frame.size.width, self.frame.size.height);
-    self->RectTextView = CGRectMake(0, 0, 22, 30);
-    self->glkViewRect = CGRectMake(0, 0, self.frame.size.width,self.frame.size.width);
-    self->controllerViewRect = CGRectMake(0, self.frame.size.width,self.frame.size.width , self.frame.size.height-self.frame.size.width);
+    self->glkViewRect = CGRectMake(0, 0, self.frame.size.width,self.frame.size.height);
 }
 
 
@@ -82,8 +106,10 @@
         resizedImage = [image resizedImageByHeight:(int)self.frame.size.width];
     }
     NSString *resizeString = [NSString stringWithFormat:@"%ix%i#",(int)self.frame.size.width,(int)self.frame.size.width];
-    UIImage *editResizedImage = [image resizedImageByMagick:resizeString];
+    UIImage *editResizedImage = [image resizedImage:resizeString];
     self->editImage = editResizedImage;
+    [self thumbnailWithContentsOfURL: imageUrl  maxPixelSize:(CGFloat) 100];
+    
 }
 
 -(void)setupGLContext
@@ -106,6 +132,9 @@
 {
     CIImage *image = [CIImage imageWithCGImage:[self->editImage CGImage]];
     self-> editImageCGImage = image;
+    
+    CIImage *thumbnail = [CIImage imageWithCGImage:[self->thumbnailImage CGImage]];
+    self-> editThumbCGImage = thumbnail;
     
     [_viewForImage bindDrawable];
     
@@ -132,11 +161,11 @@
     [self configureImage:_src];
     [self setupGLContext];
     
-    //   [self didUpdateInputParameters];
+    //   [self UpdateInputParameters];
 }
 
 
--(void)didUpdateInputParameters
+-(void)UpdateInputParameters
 {
     CIFilter *filter = [CIFilter filterWithName: @"CIColorControls"
                             withInputParameters: @{
@@ -146,46 +175,147 @@
                                                    @"inputContrast"   : inputContrast
                                                    }];
     CIImage *image = [CIImage imageWithCGImage:[self->editImage CGImage]];
-    
     CIImage *resultImage = [filter valueForKey:kCIOutputImageKey];
-    
     [_viewForImage bindDrawable];
-    
     if (_eaglContext != [EAGLContext currentContext]) {
         [EAGLContext setCurrentContext:_eaglContext];
     }
-    //glClearColor(0.5, 0.5, 0.5, 1.0);
-    
     glClearColor(0.0, 0.0, 0.0, 0.0);
-    
     glClear(GL_COLOR_BUFFER_BIT);
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    
     CGRect extentRect = [image extent];
-    
     if (CGRectIsInfinite(extentRect) || CGRectIsEmpty(extentRect)) {
         extentRect = _viewForImage.bounds;
     }
-    
     [_cictx drawImage:resultImage inRect:CGRectMake(0.0, 0.0,_viewForImage.drawableWidth,_viewForImage.drawableHeight) fromRect:extentRect];
     [_viewForImage display];
+}
+
+//Photo effect Fade
+//Photo effect Instant
+//Photo effect Mono
+//Photo effect Noir
+//MonoChrome 1 
+//Posterize 1 
+
+
+
+
+-(void) setPredifinedFilter:(NSNumber*)filterId
+{
+    CIFilter *  filter = [CIFilter filterWithName: [CIFilterNames objectAtIndex:filterId.integerValue]
+                              withInputParameters: @{
+                          @"inputImage"      : editImageCGImage
+                          }];
+   [filter setDefaults];
+    CIImage *image = [CIImage imageWithCGImage:[self->editImage CGImage]];
+    CIImage *resultImage = [filter valueForKey:kCIOutputImageKey];
+    [_viewForImage bindDrawable];
+    if (_eaglContext != [EAGLContext currentContext]) {
+        [EAGLContext setCurrentContext:_eaglContext];
+    }
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    CGRect extentRect = [image extent];
+    if (CGRectIsInfinite(extentRect) || CGRectIsEmpty(extentRect)) {
+        extentRect = _viewForImage.bounds;
+    }
+    [_cictx drawImage:resultImage inRect:CGRectMake(0.0, 0.0,_viewForImage.drawableWidth,_viewForImage.drawableHeight) fromRect:extentRect];
+    [_viewForImage display];
+}
+
+
+-(void) generateThumbsFilter
+{
+//-(void) generateThumbsFilter
+    CIContext *context = [CIContext contextWithOptions:nil];
+    NSString *path = NSTemporaryDirectory();
     
+    
+    NSMutableArray *replacementArray = [NSMutableArray arrayWithCapacity:[CIFilterNames count]];
+    [CIFilterNames enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+//    NSMutableArray *replacementArray = [NSMutableArray arrayWithCapacity:[CIFilterNames count]];
+        CIFilter * filter = [CIFilter filterWithName: obj
+                                 withInputParameters: @{
+                                                        @"inputImage"      : editThumbCGImage
+                                                        }];
+        [filter setDefaults];
+        CIImage *finalImage = [filter valueForKey:kCIOutputImageKey];
+        CGImageRef img = [context createCGImage:finalImage fromRect:[finalImage extent]];
+        UIImage *thumbnailResult = [[UIImage alloc] initWithCGImage:img];
+        NSString *filePath = [path stringByAppendingPathComponent: [NSString stringWithFormat:@"%@%@", [[NSUUID UUID] UUIDString] , @".jpeg"]]  ;
+        NSData *dataForJPEGFile = UIImageJPEGRepresentation(thumbnailResult, 1.0);
+        NSError *error2 = nil;
+        if (![dataForJPEGFile writeToFile:filePath options:NSAtomicWrite error:&error2])
+        {
+            NSLog(@"%s", "Errrorrrrr");
+            NSLog(@"%@", error2);
+        }
+        CGImageRelease(img);
+        
+        [replacementArray addObject:@{@"uri": filePath,
+                                      @"name": [filterNames objectAtIndex:idx]
+                                      }];
+    }];
+    _onThumbsReturned(@{ @"thumbs": replacementArray });
+
+    
+   
+}
+
+- (void)thumbnailWithContentsOfURL:(NSString *)source maxPixelSize:(CGFloat)maxPixelSize
+{
+    NSURL *URL = [NSURL URLWithString:source];
+
+    CGImageSourceRef imageSource = CGImageSourceCreateWithURL((__bridge CFURLRef)URL, NULL);
+    NSAssert(imageSource != NULL, @"cannot create image source");
+    
+    NSDictionary *imageOptions = @{
+                                   (NSString const *)kCGImageSourceCreateThumbnailFromImageIfAbsent : (NSNumber const *)kCFBooleanTrue,
+                                   (NSString const *)kCGImageSourceThumbnailMaxPixelSize            : @(maxPixelSize),
+                                   (NSString const *)kCGImageSourceCreateThumbnailWithTransform     : (NSNumber const *)kCFBooleanTrue
+                                   };
+    CGImageRef thumbnail = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, (__bridge CFDictionaryRef)imageOptions);
+    CFRelease(imageSource);
+    UIImage *result = [[UIImage alloc] initWithCGImage:thumbnail];
+    CGImageRelease(thumbnail);
+     self->thumbnailImage = result;
 }
 
 -(void) setSaturation:(NSNumber *)value{
     inputSaturation = value;
-    [self didUpdateInputParameters];
+    [self UpdateInputParameters];
 }
 -(void) setBrightness:(NSNumber *)value{
     inputBrightness = value;
-    [self didUpdateInputParameters];
+    [self UpdateInputParameters];
 }
 -(void) setContrast:(NSNumber *)value{
     inputContrast = value;
-    [self didUpdateInputParameters];
+    [self UpdateInputParameters];
+}
+
+-(void) setFilter:(nonnull NSNumber *)value{
+    [self setPredifinedFilter: value ];
+
+}
+
+-(void) generateFilters{
+    [self generateThumbsFilter];
 }
 
 
 @end
+
+
+//##########################
+//##########################
+//##########################
+//##########################
+//##########################
+//##########################
+//##########################
 

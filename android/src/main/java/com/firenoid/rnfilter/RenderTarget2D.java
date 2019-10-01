@@ -31,7 +31,7 @@ public class RenderTarget2D
         int status = GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER);
         if (status != GLES20.GL_FRAMEBUFFER_COMPLETE)
             throw (new RuntimeException("SHEE"));
-        GLES20.glClearColor(.0f, .0f, .0f, 1.0f);
+        GLES20.glClearColor(.0f, .0f, .0f, .0f);
         GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
         return true;
     }
@@ -64,7 +64,7 @@ public class RenderTarget2D
         GLES20.glViewport(x, y, w, h);
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
 
-        GLES20.glClearColor(.0f, .0f, .0f, 1.0f);
+        GLES20.glClearColor(.0f, .0f, .0f, .0f);
         GLES20.glClear( GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
     }
 

@@ -102,11 +102,11 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
         Log.d("React:", "source");
         mActivity = activity;
         mContext = context;
-
         //setBackgroundColor(Color.YELLOW);
 //        setZOrderMediaOverlay(true);
 
 //        this.filterView = new RNFilterView(context,this);
+//        setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT));
         setEGLContextClientVersion(2);
         setRenderer(this);
         setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);

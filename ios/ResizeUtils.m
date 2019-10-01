@@ -1,14 +1,6 @@
-//
-//  UIImage+ResizeMagick.m
-//
-//
-//  Created by Vlad Andersen on 1/5/13.
-//
-//
-
 #import "ResizeUtils.h"
 
-@implementation UIImage (ResizeMagick)
+@implementation UIImage (Resize)
 
 // width	Width given, height automagically selected to preserve aspect ratio.
 // xheight	Height given, width automagically selected to preserve aspect ratio.
@@ -17,7 +9,7 @@
 // widthxheight!	Exact dimensions, no aspect ratio preserved.
 // widthxheight#	Crop to this exact dimensions.
 
-- (UIImage *) resizedImageByMagick: (NSString *) spec
+- (UIImage *) resizedImage: (NSString *) spec
 {
 
     if([spec hasSuffix:@"!"]) {
@@ -138,8 +130,8 @@
     return resizedImage;
 }
 
-- (UIImage*) croppedImageWithRect: (CGRect) rect {
-
+- (UIImage*) croppedImageWithRect: (CGRect) rect
+{
 	UIGraphicsBeginImageContextWithOptions(rect.size, NO, 0.0);
     CGContextRef context = UIGraphicsGetCurrentContext();
     CGRect drawRect = CGRectMake(-rect.origin.x, -rect.origin.y, self.size.width, self.size.height);

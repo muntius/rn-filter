@@ -21,6 +21,9 @@ RCT_EXPORT_MODULE(RNFilter);
 
 RCT_EXPORT_VIEW_PROPERTY(src, NSString);
 
+//RCT_EXPORT_VIEW_PROPERTY(onSurfaceCreate, RCTDirectEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onThumbsReturned, RCTBubblingEventBlock)
+
 - (UIView *)view
 {
   FilterView *filterView = [[FilterView alloc] init];
@@ -80,10 +83,48 @@ RCT_EXPORT_METHOD(
 }
 
 
+RCT_EXPORT_METHOD(
+                  setFilter:(nonnull NSNumber*) reactTag
+                  value:(nonnull NSNumber*) value ) {
+    
+    [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
+        FilterView *view = (FilterView *)viewRegistry[reactTag];
+        if (!view || ![view isKindOfClass:[FilterView class]]) {
+            RCTLogError(@"Cannot find NativeView with tag #%@", reactTag);
+            return;
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [view setFilter:value];
+        });
+    }];
+    
+}
+
+RCT_EXPORT_METHOD(
+                  generateFilters:(nonnull NSNumber*) reactTag
+                  ) {
+    
+    [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
+        FilterView *view = (FilterView *)viewRegistry[reactTag];
+        if (!view || ![view isKindOfClass:[FilterView class]]) {
+            RCTLogError(@"Cannot find NativeView with tag #%@", reactTag);
+            return;
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [view generateFilters];
+        });
+    }];
+    
+}
+
+
 - (dispatch_queue_t)methodQueue
 {
   return dispatch_get_main_queue();
 }
+
+
+
 
 @end
 

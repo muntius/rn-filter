@@ -8,6 +8,8 @@
 
 #import <UIKit/UIKit.h>
 #import <React/RCTBridge.h>
+#import "FilterViewManager.h"
+
 #import "FilterView.h"
 
 @class FilterViewManager;
@@ -24,6 +26,13 @@
 -(void) setSaturation:(NSNumber *)value;
 -(void) setBrightness:(NSNumber *)value;
 -(void) setContrast:(NSNumber *)value;
+-(void) setFilter:(nonnull NSNumber *)value;
+-(void) generateFilters;
+
+
+//@property (nonatomic, copy) RCTDirectEventBlock onSurfaceCreate;
+@property (nonatomic, copy) RCTBubblingEventBlock onDataReturned;
+@property (nonatomic, copy) RCTBubblingEventBlock onThumbsReturned;
 
 @end
 
