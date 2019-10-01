@@ -7,7 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B3E7B58A1CC2AC0600A0062D /* RNRnFilter.m in Sources */ = {isa = PBXBuildFile; fileRef = B3E7B5891CC2AC0600A0062D /* RNRnFilter.m */; };
+		D24C742C233C76FD00371D6D /* FilterViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D24C7428233C76FD00371D6D /* FilterViewManager.m */; };
+		D24C742D233C76FD00371D6D /* FilterView.m in Sources */ = {isa = PBXBuildFile; fileRef = D24C7429233C76FD00371D6D /* FilterView.m */; };
+		D24C7430233C77E100371D6D /* ResizeUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = D24C742F233C77E100371D6D /* ResizeUtils.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -23,9 +25,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		134814201AA4EA6300B7C361 /* libRNRnFilter.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRNRnFilter.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		B3E7B5881CC2AC0600A0062D /* RNRnFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNRnFilter.h; sourceTree = "<group>"; };
-		B3E7B5891CC2AC0600A0062D /* RNRnFilter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNRnFilter.m; sourceTree = "<group>"; };
+		134814201AA4EA6300B7C361 /* libRNFilter.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRNFilter.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		D24C7428233C76FD00371D6D /* FilterViewManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FilterViewManager.m; sourceTree = "<group>"; };
+		D24C7429233C76FD00371D6D /* FilterView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FilterView.m; sourceTree = "<group>"; };
+		D24C742A233C76FD00371D6D /* FilterView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FilterView.h; sourceTree = "<group>"; };
+		D24C742B233C76FD00371D6D /* FilterViewManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FilterViewManager.h; sourceTree = "<group>"; };
+		D24C742E233C77E100371D6D /* ResizeUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ResizeUtils.h; sourceTree = "<group>"; };
+		D24C742F233C77E100371D6D /* ResizeUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ResizeUtils.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -42,7 +48,7 @@
 		134814211AA4EA7D00B7C361 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				134814201AA4EA6300B7C361 /* libRNRnFilter.a */,
+				134814201AA4EA6300B7C361 /* libRNFilter.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -50,8 +56,12 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
-				B3E7B5881CC2AC0600A0062D /* RNRnFilter.h */,
-				B3E7B5891CC2AC0600A0062D /* RNRnFilter.m */,
+				D24C742E233C77E100371D6D /* ResizeUtils.h */,
+				D24C742F233C77E100371D6D /* ResizeUtils.m */,
+				D24C742A233C76FD00371D6D /* FilterView.h */,
+				D24C7429233C76FD00371D6D /* FilterView.m */,
+				D24C742B233C76FD00371D6D /* FilterViewManager.h */,
+				D24C7428233C76FD00371D6D /* FilterViewManager.m */,
 				134814211AA4EA7D00B7C361 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -59,9 +69,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		58B511DA1A9E6C8500147676 /* RNRnFilter */ = {
+		58B511DA1A9E6C8500147676 /* RNFilter */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 58B511EF1A9E6C8500147676 /* Build configuration list for PBXNativeTarget "RNRnFilter" */;
+			buildConfigurationList = 58B511EF1A9E6C8500147676 /* Build configuration list for PBXNativeTarget "RNFilter" */;
 			buildPhases = (
 				58B511D71A9E6C8500147676 /* Sources */,
 				58B511D81A9E6C8500147676 /* Frameworks */,
@@ -71,9 +81,9 @@
 			);
 			dependencies = (
 			);
-			name = RNRnFilter;
+			name = RNFilter;
 			productName = RCTDataManager;
-			productReference = 134814201AA4EA6300B7C361 /* libRNRnFilter.a */;
+			productReference = 134814201AA4EA6300B7C361 /* libRNFilter.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
@@ -90,7 +100,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 58B511D61A9E6C8500147676 /* Build configuration list for PBXProject "RNRnFilter" */;
+			buildConfigurationList = 58B511D61A9E6C8500147676 /* Build configuration list for PBXProject "RNFilter" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -102,7 +112,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				58B511DA1A9E6C8500147676 /* RNRnFilter */,
+				58B511DA1A9E6C8500147676 /* RNFilter */,
 			);
 		};
 /* End PBXProject section */
@@ -112,7 +122,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B3E7B58A1CC2AC0600A0062D /* RNRnFilter.m in Sources */,
+				D24C742C233C76FD00371D6D /* FilterViewManager.m in Sources */,
+				D24C742D233C76FD00371D6D /* FilterView.m in Sources */,
+				D24C7430233C77E100371D6D /* ResizeUtils.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -204,14 +216,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
-				"$(inherited)",
+					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$(SRCROOT)/../../../React/**",
 					"$(SRCROOT)/../../react-native/React/**",
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = RNRnFilter;
+				PRODUCT_NAME = RNFilter;
 				SKIP_INSTALL = YES;
 			};
 			name = Debug;
@@ -227,7 +239,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = RNRnFilter;
+				PRODUCT_NAME = RNFilter;
 				SKIP_INSTALL = YES;
 			};
 			name = Release;
@@ -235,7 +247,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		58B511D61A9E6C8500147676 /* Build configuration list for PBXProject "RNRnFilter" */ = {
+		58B511D61A9E6C8500147676 /* Build configuration list for PBXProject "RNFilter" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				58B511ED1A9E6C8500147676 /* Debug */,
@@ -244,7 +256,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		58B511EF1A9E6C8500147676 /* Build configuration list for PBXNativeTarget "RNRnFilter" */ = {
+		58B511EF1A9E6C8500147676 /* Build configuration list for PBXNativeTarget "RNFilter" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				58B511F01A9E6C8500147676 /* Debug */,
