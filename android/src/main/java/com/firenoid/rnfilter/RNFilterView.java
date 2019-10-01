@@ -7,22 +7,14 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.drawable.Drawable;
 import android.media.MediaScannerConnection;
-import android.media.effect.Effect;
-import android.media.effect.EffectContext;
-import android.media.effect.EffectFactory;
 import android.net.Uri;
-import android.os.Environment;
-import android.support.v4.content.ContextCompat;
+import android.provider.MediaStore;
 import android.util.Log;
-import android.view.ViewGroup;
-import android.widget.TextView;
 
-import com.firenoid.rnfilter.R;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -30,9 +22,10 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
-import java.util.Random;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -40,6 +33,15 @@ import android.opengl.GLUtils;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.bridge.WritableArray;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeArray;
+import com.facebook.react.bridge.WritableNativeMap;
+import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.firenoid.rnfilter.Filters;
 
 public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Renderer {
 
@@ -50,10 +52,10 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
     private Context mContext;
 
 
-    private int hShaderProgramBase;
-    private int hShaderProgramFinalPass;
-    private int hShaderProgramContrastSaturationBrightness;
-    public boolean PARAMS_EnableContrastSaturationBrightness;
+    private int mShaderProgramBase;
+    private int mShaderProgramFinalPass;
+    private int mShaderProgramContrastSaturationBrightness;
+    public boolean EnableContrastSaturationBrightness;
 
 
     public boolean BOOL_LoadTexture = false;
@@ -78,15 +80,16 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
     public int[] hToFilterTexture;
 
 
-    private boolean mInitialized = false;
+    private boolean preFilter = false;
     public float mSaturationValue = 1f;
     public float mContrastValue = 1f;
     public float mBrightnessValue = 1f;
     private volatile boolean saveFrame;
 
     public Bitmap toLoad = null;
+    public Bitmap originalBitmap = null;
     public Bitmap currentBitmap = null;
-    public Bitmap testBitmap = null;
+    public Bitmap thumbnailBitmap = null;
     public boolean IsUsedBitmap()
     {
         return !default_b;
@@ -94,6 +97,32 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
     private boolean startup = true;
     private boolean default_b = true;
     private String source;
+    private int hPos, hTex;
+    private int cmp_W, cmp_H, cmp_X, cmp_Y;
+    private int tx;
+    String ERROR = "";
+
+
+    private String generalVS =
+            "attribute vec4 vPosition;" +
+                    "attribute vec2 texCoords;" +
+                    "uniform sampler2D filteredPhoto;" +
+                    "varying vec2 UV;" +
+                    "void main() {" +
+                    "  gl_Position = vPosition;" +
+                    "  UV = texCoords;" +
+                    "}";
+    private String generalreverseVS =
+            "attribute vec4 vPosition;" +
+                    "attribute vec2 texCoords;" +
+                    "uniform sampler2D filteredPhoto;" +
+                    "varying vec2 UV;" +
+                    "void main() {" +
+                    "  gl_Position = vPosition;" +
+                    "  vec2 tc = vec2(1, 1) - texCoords;" +
+                    "  tc.x = texCoords.x;" +
+                    "  UV = tc;" +
+                    "}";
 
 
     public RNFilterView(Context context, Activity activity) {
@@ -102,11 +131,6 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
         Log.d("React:", "source");
         mActivity = activity;
         mContext = context;
-        //setBackgroundColor(Color.YELLOW);
-//        setZOrderMediaOverlay(true);
-
-//        this.filterView = new RNFilterView(context,this);
-//        setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT));
         setEGLContextClientVersion(2);
         setRenderer(this);
         setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
@@ -121,47 +145,209 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
         Log.d("React:", "RNFilterMainView(Contructtor)");
         Log.d("React:", "source");
         Log.d("React:", source);
-        PARAMS_EnableContrastSaturationBrightness= true;
+        EnableContrastSaturationBrightness= true;
 //        this.update();
     }
     public void setBrightness(double value) {
-        this.source = source;
-        Log.d("React:", "RNFilterMainView(Contructtor)");
-        Log.d("React:", "setBrightness");
-        Log.d("React:",  String.valueOf(value));
-        Log.d("React:", "setBrightness");
-
-//        mCurrentEffect = "brightness";
         mBrightnessValue = (float) value;
-        Log.d("React:", "mBrightnessValue");
-        Log.d("React:", String.valueOf(mBrightnessValue));
         shallRenderImage = true;
         this.requestRender();
 
-//        this.update();
     }
     public void setContrast(double value) {
-        this.source = source;
-        Log.d("React:", "RNFilterMainView(Contructtor)");
-        Log.d("React:", "setContrast");
-        Log.d("React:",  String.valueOf(value));
-//        mCurrentEffect = "contrast";
         shallRenderImage = true;
         mContrastValue = (float) value;
         this.requestRender();
     }
     public void setSaturation(double value) {
-        this.source = source;
-        Log.d("React:", "RNFilterMainView(Contructtor)");
-        Log.d("React:", "setSaturation");
-        Log.d("React:", String.valueOf(value));
-//        mCurrentEffect = "saturation";
         shallRenderImage = true;
         mSaturationValue = (float) value;
         this.requestRender();
     }
+    public void setFilter(double value) {
+        preFilter = true;
+        setFilterManual((int)value);
+        this.requestRender();
+    }
 
 
+
+
+
+
+
+    public void setFilterManual(int value) {
+        Bitmap result = null;
+        Bitmap newBitmap = this.originalBitmap.copy(this.originalBitmap.getConfig(), true);
+
+        switch (value){
+            case 0:
+                result = Filters.vignette(newBitmap);
+            break;
+            case 1:
+                result = Filters.saturation(newBitmap, 160);
+            break;
+            case 2:
+                result = Filters.sepia(newBitmap);
+                break;
+            case 3:
+                result = Filters.hue(newBitmap, 50);
+                break;
+            case 4:
+                result = Filters.grayscale(newBitmap);
+                break;
+            case 5:
+                result = Filters.boost(newBitmap, 1, 30);
+                break;
+            case 6:
+                result = Filters.boost(newBitmap, 2, 30);
+                break;
+            case 7:
+                result = Filters.boost(newBitmap,3, 30);
+                break;
+            case 8:
+                result = Filters.brightness(newBitmap, 70);
+                break;
+            case 9:
+                result = Filters.gaussian(newBitmap);
+                break;
+        }
+        if(result != null){
+            LoadBitmap(result);
+//            newBitmap.recycle();
+        }
+
+
+    }
+
+
+    public void generateFilters() {
+        final WritableMap map = generateThumbs();
+        final ReactContext reactContext = (ReactContext) mContext;
+        reactContext.runOnJSQueueThread(new Runnable() {
+            @Override
+            public void run() {
+                reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "thumbsReturned", map);
+            }
+        });
+
+
+    }
+
+    public WritableMap generateThumbs(){
+
+        WritableNativeMap resultMap = new WritableNativeMap();
+        WritableNativeArray AlbumListArray = new WritableNativeArray();
+        WritableMap map;
+        String url;
+        Bitmap result;
+
+
+        map = Arguments.createMap();
+        result = Filters.vignette(this.thumbnailBitmap);
+        url = generateBitmap(result);
+        map.putString("uri", url);
+        map.putString("name", "vignette");
+        map.putInt("id", 0);
+        AlbumListArray.pushMap(map);
+
+
+        map = Arguments.createMap();
+        result = Filters.saturation(this.thumbnailBitmap, 160);
+        url = generateBitmap(result);
+        map.putString("uri", url);
+        map.putString("name", "saturation");
+        map.putInt("id", 1);
+        AlbumListArray.pushMap( map);
+
+
+        map = Arguments.createMap();
+        result = Filters.gaussian(this.thumbnailBitmap);
+        url = generateBitmap(result);
+        map.putString("uri", url);
+        map.putString("name", "gaussian");
+        map.putInt("id", 9);
+        AlbumListArray.pushMap(map);
+
+
+        map = Arguments.createMap();
+        result = Filters.sepia(this.thumbnailBitmap);
+        url = generateBitmap(result);
+        map.putString("uri", url);
+        map.putString("name", "sepia");
+        map.putInt("id", 2);
+        AlbumListArray.pushMap( map);
+
+        map = Arguments.createMap();
+        result = Filters.hue(this.thumbnailBitmap, 50);
+        url = generateBitmap(result);
+        map.putString("uri", url);
+        map.putString("name", "hue");
+        map.putInt("id", 3);
+        AlbumListArray.pushMap(map);
+
+        map = Arguments.createMap();
+        result = Filters.grayscale(this.thumbnailBitmap);
+        url = generateBitmap(result);
+        map.putString("uri", url);
+        map.putString("name", "grayscale");
+        map.putInt("id", 4);
+        AlbumListArray.pushMap( map);
+
+        map = Arguments.createMap();
+        result = Filters.boost(this.thumbnailBitmap, 1, 30);
+        url = generateBitmap(result);
+        map.putString("uri", url);
+        map.putString("name", "boost");
+        map.putInt("id", 5);
+        AlbumListArray.pushMap( map);
+
+        map = Arguments.createMap();
+        result = Filters.boost(this.thumbnailBitmap, 2, 30);
+        url = generateBitmap(result);
+        map.putString("uri", url);
+        map.putString("name", "boost");
+        map.putInt("id", 6);
+        AlbumListArray.pushMap( map);
+
+        map = Arguments.createMap();
+        result = Filters.boost(this.thumbnailBitmap,3, 30);
+        url = generateBitmap(result);
+        map.putString("uri", url);
+        map.putString("name", "boost");
+        map.putInt("id", 7);
+        AlbumListArray.pushMap( map);
+
+        map = Arguments.createMap();
+        result = Filters.brightness(this.thumbnailBitmap, 70);
+        url = generateBitmap(result);
+        map.putString("uri", url);
+        map.putString("name", "brightness");
+        map.putInt("id", 8);
+        AlbumListArray.pushMap( map);
+
+        Log.d("ARRAY", String.valueOf(AlbumListArray));
+        resultMap.putArray("thumbs", AlbumListArray);
+        return resultMap;
+    }
+
+
+
+    public String  generateBitmap(Bitmap source ){
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        source.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+        File file = new File(mContext.getCacheDir(), System.currentTimeMillis()+".jpeg");
+        try {
+            FileOutputStream fo = new FileOutputStream(file);
+            fo.write(bytes.toByteArray());
+            fo.flush();
+            fo.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
+        }
+        return "file://" + file.getAbsolutePath();
+    }
 
 
     public void onSurfaceCreated(GL10 unused, EGLConfig config)
@@ -202,153 +388,27 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
         TC.put(texCoords); TC.position(0);
         loadShaders();
 //        testBitmap = generateTestBitmap();
-        int id = R.drawable.duckling;
         // Load input bitmap
-        Bitmap bitmap = BitmapFactory.decodeResource(getResources(),  id);
 //        mImageWidth = bitmap.getWidth();
 //        mImageHeight = bitmap.getHeight();
-        LoadBitmap(bitmap);
-    }
-
-
-    private String generalVS =
-            "attribute vec4 vPosition;" +
-                    "attribute vec2 texCoords;" +
-                    "uniform sampler2D filteredPhoto;" +
-                    "varying vec2 UV;" +
-                    "void main() {" +
-                    "  gl_Position = vPosition;" +
-                    "  UV = texCoords;" +
-                    "}";
-    private String generalreverseVS =
-            "attribute vec4 vPosition;" +
-                    "attribute vec2 texCoords;" +
-                    "uniform sampler2D filteredPhoto;" +
-                    "varying vec2 UV;" +
-                    "void main() {" +
-                    "  gl_Position = vPosition;" +
-                    "  vec2 tc = vec2(1, 1) - texCoords;" +
-                    "  tc.x = texCoords.x;" +
-                    "  UV = tc;" +
-                    "}";
-    private void loadShaders()
-    {
-
-        //BASE SHADER
-        String baseshader_FS =
-                "precision mediump float;" +
-                        "varying vec2 UV;" +
-                        "void main() {" +
-                        "  gl_FragColor = vec4(UV.x, UV.y, 0, 1);" +
-                        "}";
-        hShaderProgramBase = createprogram(baseshader_FS);
-
-        //Contrast, brightness, saturation
-        String cbs_FS =
-                "precision mediump float;\n" +
-                        "uniform sampler2D filteredPhoto;\n" +
-                        "uniform float Contrast;\n" +
-                        "uniform float Brightness;\n" +
-                        "uniform float Saturation;\n" +
-                        "varying vec2 UV;\n" +
-                        "" +
-                        "void main()\n" +
-                        "{" +
-                        "   vec4 c = texture2D(filteredPhoto, UV);\n" +
-                        "   //Brightness\n" +
-                        "   c = vec4(c.r * Brightness, c.g * Brightness, c.b * Brightness, 1);\n" +
-                        "   //Contrast\n" +
-                        "   c.r = ((c.r-0.5) * Contrast) + 0.5;\n" +
-                        "   c.g = ((c.g-0.5) * Contrast) + 0.5;\n" +
-                        "   c.b = ((c.b-0.5) * Contrast) + 0.5;\n" +
-                        "   //Saturation\n" +
-                        "   float grey = c.r * 0.299 + c.g * 0.587 + c.b * 0.114;\n" +
-                        "   c.r = grey + ((c.r - grey) * Saturation);\n" +
-                        "   c.g = grey + ((c.g - grey) * Saturation);\n" +
-                        "   c.b = grey + ((c.b - grey) * Saturation);\n" +
-                        "\n" +
-                        "   gl_FragColor = c;\n" +
-                        "}";
-        hShaderProgramContrastSaturationBrightness = createprogram(generalreverseVS, cbs_FS);
-        String finalPass_FS =
-                "precision mediump float;" +
-                        "uniform sampler2D filteredPhoto;" +
-                        "varying vec2 UV;" +
-                        "void main() {" +
-                        "  gl_FragColor = texture2D(filteredPhoto, UV);" +
-                        "}";
-        hShaderProgramFinalPass = createprogram(finalPass_FS);
-    }
-
-    private int createprogram(String fssource) { return createprogram(generalVS, fssource);}
-    private int createprogram(String vssource, String fssource)
-    {
-        int toRet;
-        toRet = GLES20.glCreateProgram();
-        GLES20.glAttachShader(toRet, compileshader(GLES20.GL_VERTEX_SHADER, vssource));
-        GLES20.glAttachShader(toRet, compileshader(GLES20.GL_FRAGMENT_SHADER, fssource));
-        GLES20.glLinkProgram(toRet);
-        return toRet;
-    }
-    String ERROR = "";
-    private int compileshader(int type, String shaderCode)
-    {
-        int shader = GLES20.glCreateShader(type);
-        GLES20.glShaderSource(shader, shaderCode);
-        GLES20.glCompileShader(shader);
-        ERROR = GLES20.glGetShaderInfoLog(shader);
-        if (ERROR.length() > 0) { //Log.e("CO2 Photo editor - ", "Exception not thrown! FilterRenderer line 688\n"+ERROR);
-            Log.e("badango", ERROR);
-            throw (new RuntimeException(ERROR));
+        try
+        {
+            this.originalBitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver() , Uri.parse(source));
+            LoadBitmap(this.originalBitmap);
         }
-        return shader;
-    }
-
-    private int hPos, hTex;
-    private int cmp_W, cmp_H, cmp_X, cmp_Y;
-    private int tx;
-
-
-    public void refreshSize() {
-        int scrW = this.getWidth();
-        int scrH = this.getHeight();
-        float wRat = (float) ImageWidth / (float) scrW;
-        float hRat = (float) ImageHeigth / (float) scrH;
-        boolean majW = wRat > hRat;
-        float aspect = (float) (majW ? (float) ImageWidth / (float) ImageHeigth : (float) ImageHeigth / (float) ImageWidth);
-        if (majW) {
-            cmp_W = scrW;
-            cmp_X = 0;
-            cmp_H = (int) ((float) scrW / aspect);
-            cmp_Y = (int) (((float) scrH - (float) cmp_H) / 2f);
-            //throw(new RuntimeException("IW: " + ImageWidth + "\nIH: " + ImageHeigth + "\nwRat = " + wRat + "\nhRat = " + hRat + "\nX: " + cmp_X + "\nY: " + cmp_Y + "\nW: " + cmp_W + "\nH: " + cmp_H + "\nscW: " + scrW + "\nscH: " + scrH));
-        } else {
-            cmp_H = scrH;
-            cmp_Y = 0;
-            cmp_W = (int) ((float) scrH / (float) aspect);
-            cmp_X = (int) (((float) scrW - (float) cmp_W) / 2f);
+        catch (Exception e)
+        {
+            //handle exception
         }
+
     }
-    public void refreshSize(int width_, int height_) {
-        int scrW = width_;
-        int scrH = height_;
-        float wRat = (float) ImageWidth / (float) scrW;
-        float hRat = (float) ImageHeigth / (float) scrH;
-        boolean majW = wRat > hRat;
-        float aspect = (float) (majW ? (float) ImageWidth / (float) ImageHeigth : (float) ImageHeigth / (float) ImageWidth);
-        if (majW) {
-            cmp_W = scrW;
-            cmp_X = 0;
-            cmp_H = (int) ((float) scrW / aspect);
-            cmp_Y = (int) (((float) scrH - (float) cmp_H) / 2f);
-            //throw(new RuntimeException("IW: " + ImageWidth + "\nIH: " + ImageHeigth + "\nwRat = " + wRat + "\nhRat = " + hRat + "\nX: " + cmp_X + "\nY: " + cmp_Y + "\nW: " + cmp_W + "\nH: " + cmp_H + "\nscW: " + scrW + "\nscH: " + scrH));
-        } else {
-            cmp_H = scrH;
-            cmp_Y = 0;
-            cmp_W = (int) ((float) scrH / (float) aspect);
-            cmp_X = (int) (((float) scrW - (float) cmp_W) / 2f);
-        }
+
+
+    public void onSurfaceChanged(GL10 unused, int width, int height)
+    {
+        GLES20.glViewport(0, 0, width, height);
     }
+
 
     public void onDrawFrame(GL10 unused) {
 
@@ -367,9 +427,9 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
             if (!SaveImage && !shallRenderImage) {
                 RenderTarget2D.SetDefault(cmp_X, cmp_Y, cmp_W, cmp_H);
                 GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
-                GLES20.glUseProgram(hShaderProgramFinalPass);
-                setVSParams(hShaderProgramFinalPass);
-                setShaderParamPhoto(hShaderProgramFinalPass, GetCurTexture());
+                GLES20.glUseProgram(mShaderProgramFinalPass);
+                setVSParams(mShaderProgramFinalPass);
+                setShaderParamPhoto(mShaderProgramFinalPass, GetCurTexture());
                 drawquad();
                 return;
             }
@@ -380,15 +440,15 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
         firstshit = true;
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
-        if (PARAMS_EnableContrastSaturationBrightness)
+        if (EnableContrastSaturationBrightness)
         {
             SetRenderTarget();
-            GLES20.glUseProgram(hShaderProgramContrastSaturationBrightness);
-            setVSParams(hShaderProgramContrastSaturationBrightness);
-            setShaderParamPhoto(hShaderProgramContrastSaturationBrightness, GetCurTexture());
-            int sat = GLES20.glGetUniformLocation(hShaderProgramContrastSaturationBrightness, "Saturation");
-            int br = GLES20.glGetUniformLocation(hShaderProgramContrastSaturationBrightness, "Brightness");
-            int ctr = GLES20.glGetUniformLocation(hShaderProgramContrastSaturationBrightness, "Contrast");
+            GLES20.glUseProgram(mShaderProgramContrastSaturationBrightness);
+            setVSParams(mShaderProgramContrastSaturationBrightness);
+            setShaderParamPhoto(mShaderProgramContrastSaturationBrightness, GetCurTexture());
+            int sat = GLES20.glGetUniformLocation(mShaderProgramContrastSaturationBrightness, "Saturation");
+            int br = GLES20.glGetUniformLocation(mShaderProgramContrastSaturationBrightness, "Brightness");
+            int ctr = GLES20.glGetUniformLocation(mShaderProgramContrastSaturationBrightness, "Contrast");
             GLES20.glUniform1f(sat, mSaturationValue);
             GLES20.glUniform1f(br, mBrightnessValue);
             GLES20.glUniform1f(ctr, mContrastValue);
@@ -410,9 +470,9 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
 //            mActivity.toastHandler.post(mActivity.loadingRunnableShow);
 
             saveTarget.Set();
-            GLES20.glUseProgram(hShaderProgramFinalPass);
-            setVSParams(hShaderProgramFinalPass);
-            setShaderParamPhoto(hShaderProgramFinalPass, tx);
+            GLES20.glUseProgram(mShaderProgramFinalPass);
+            setVSParams(mShaderProgramFinalPass);
+            setShaderParamPhoto(mShaderProgramFinalPass, tx);
             drawquad();
 
             saveTarget.pfsave();
@@ -475,13 +535,129 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
 //            MainActivity.toastHandler.post(MainActivity.loadingRunnableDismiss);
         }
         RenderTarget2D.SetDefault(cmp_X, cmp_Y, cmp_W, cmp_H);
-        GLES20.glUseProgram(hShaderProgramFinalPass);
-        setVSParams(hShaderProgramFinalPass);
-        setShaderParamPhoto(hShaderProgramFinalPass, tx);
+        GLES20.glUseProgram(mShaderProgramFinalPass);
+        setVSParams(mShaderProgramFinalPass);
+        setShaderParamPhoto(mShaderProgramFinalPass, tx);
         drawquad();
         //didshit = false;
         //firstshit = true;
     }
+
+
+    private int createprogram(String fssource) { return createprogram(generalVS, fssource);}
+    private int createprogram(String vssource, String fssource)
+    {
+        int toRet;
+        toRet = GLES20.glCreateProgram();
+        GLES20.glAttachShader(toRet, compileshader(GLES20.GL_VERTEX_SHADER, vssource));
+        GLES20.glAttachShader(toRet, compileshader(GLES20.GL_FRAGMENT_SHADER, fssource));
+        GLES20.glLinkProgram(toRet);
+        return toRet;
+    }
+
+    private int compileshader(int type, String shaderCode)
+    {
+        int shader = GLES20.glCreateShader(type);
+        GLES20.glShaderSource(shader, shaderCode);
+        GLES20.glCompileShader(shader);
+        ERROR = GLES20.glGetShaderInfoLog(shader);
+        if (ERROR.length() > 0) { //Log.e("CO2 Photo editor - ", "Exception not thrown! FilterRenderer line 688\n"+ERROR);
+            Log.e("badango", ERROR);
+            throw (new RuntimeException(ERROR));
+        }
+        return shader;
+    }
+
+    private void loadShaders()
+    {
+
+        //BASE SHADER
+        String baseshader_FS =
+                "precision mediump float;" +
+                        "varying vec2 UV;" +
+                        "void main() {" +
+                        "  gl_FragColor = vec4(UV.x, UV.y, 0, 1);" +
+                        "}";
+        mShaderProgramBase = createprogram(baseshader_FS);
+
+        //Contrast, brightness, saturation
+        String cbs_FS =
+                "precision mediump float;\n" +
+                        "uniform sampler2D filteredPhoto;\n" +
+                        "uniform float Contrast;\n" +
+                        "uniform float Brightness;\n" +
+                        "uniform float Saturation;\n" +
+                        "varying vec2 UV;\n" +
+                        "" +
+                        "void main()\n" +
+                        "{" +
+                        "   vec4 c = texture2D(filteredPhoto, UV);\n" +
+                        "   //Brightness\n" +
+                        "   c = vec4(c.r * Brightness, c.g * Brightness, c.b * Brightness, 1);\n" +
+                        "   //Contrast\n" +
+                        "   c.r = ((c.r-0.5) * Contrast) + 0.5;\n" +
+                        "   c.g = ((c.g-0.5) * Contrast) + 0.5;\n" +
+                        "   c.b = ((c.b-0.5) * Contrast) + 0.5;\n" +
+                        "   //Saturation\n" +
+                        "   float grey = c.r * 0.299 + c.g * 0.587 + c.b * 0.114;\n" +
+                        "   c.r = grey + ((c.r - grey) * Saturation);\n" +
+                        "   c.g = grey + ((c.g - grey) * Saturation);\n" +
+                        "   c.b = grey + ((c.b - grey) * Saturation);\n" +
+                        "\n" +
+                        "   gl_FragColor = c;\n" +
+                        "}";
+        mShaderProgramContrastSaturationBrightness = createprogram(generalreverseVS, cbs_FS);
+        String finalPass_FS =
+                "precision mediump float;" +
+                        "uniform sampler2D filteredPhoto;" +
+                        "varying vec2 UV;" +
+                        "void main() {" +
+                        "  gl_FragColor = texture2D(filteredPhoto, UV);" +
+                        "}";
+        mShaderProgramFinalPass = createprogram(finalPass_FS);
+    }
+
+    public void refreshSize() {
+        int scrW = this.getWidth();
+        int scrH = this.getHeight();
+        float wRat = (float) ImageWidth / (float) scrW;
+        float hRat = (float) ImageHeigth / (float) scrH;
+        boolean majW = wRat > hRat;
+        float aspect = (float) (majW ? (float) ImageWidth / (float) ImageHeigth : (float) ImageHeigth / (float) ImageWidth);
+        if (majW) {
+            cmp_W = scrW;
+            cmp_X = 0;
+            cmp_H = (int) ((float) scrW / aspect);
+            cmp_Y = (int) (((float) scrH - (float) cmp_H) / 2f);
+            //throw(new RuntimeException("IW: " + ImageWidth + "\nIH: " + ImageHeigth + "\nwRat = " + wRat + "\nhRat = " + hRat + "\nX: " + cmp_X + "\nY: " + cmp_Y + "\nW: " + cmp_W + "\nH: " + cmp_H + "\nscW: " + scrW + "\nscH: " + scrH));
+        } else {
+            cmp_H = scrH;
+            cmp_Y = 0;
+            cmp_W = (int) ((float) scrH / (float) aspect);
+            cmp_X = (int) (((float) scrW - (float) cmp_W) / 2f);
+        }
+    }
+    public void refreshSize(int width_, int height_) {
+        int scrW = width_;
+        int scrH = height_;
+        float wRat = (float) ImageWidth / (float) scrW;
+        float hRat = (float) ImageHeigth / (float) scrH;
+        boolean majW = wRat > hRat;
+        float aspect = (float) (majW ? (float) ImageWidth / (float) ImageHeigth : (float) ImageHeigth / (float) ImageWidth);
+        if (majW) {
+            cmp_W = scrW;
+            cmp_X = 0;
+            cmp_H = (int) ((float) scrW / aspect);
+            cmp_Y = (int) (((float) scrH - (float) cmp_H) / 2f);
+            //throw(new RuntimeException("IW: " + ImageWidth + "\nIH: " + ImageHeigth + "\nwRat = " + wRat + "\nhRat = " + hRat + "\nX: " + cmp_X + "\nY: " + cmp_Y + "\nW: " + cmp_W + "\nH: " + cmp_H + "\nscW: " + scrW + "\nscH: " + scrH));
+        } else {
+            cmp_H = scrH;
+            cmp_Y = 0;
+            cmp_W = (int) ((float) scrH / (float) aspect);
+            cmp_X = (int) (((float) scrW - (float) cmp_W) / 2f);
+        }
+    }
+
 
     /*
         public void setPARAMS_FilmGrainSeed(float v)
@@ -546,10 +722,7 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
                 8, TC);
     }
 
-    public void onSurfaceChanged(GL10 unused, int width, int height)
-    {
-        GLES20.glViewport(0, 0, width, height);
-    }
+
 
 
     public void LoadBitmap(Bitmap bmp)
@@ -563,10 +736,11 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
             double x = 7900000;
             h=Math.sqrt(x/y);
             b=x/(h);
-            bmp= Bitmap.createScaledBitmap(bmp, (int)b, (int)h, true);
+            bmp = Bitmap.createScaledBitmap(bmp, (int)b, (int)h, true);
         }
         toLoad = bmp;
         this.BOOL_LoadTexture = true;
+        this.thumbnailBitmap = Bitmap.createScaledBitmap(bmp, (int)120, (int)120, true);
     }
     public void LoadTexture(Bitmap bmp)
     {
@@ -588,7 +762,6 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
         this.blur2 = new RenderTarget2D(bmp.getWidth() / 2, bmp.getHeight() / 2);
         this.Render();
     }
-
     private int[] loadTexture(Bitmap bitmap)
     {
         final int[] textureHandle = new int[1];
@@ -632,8 +805,6 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
                 bitmap.setPixel(x, y, 0xFF000000);
             }
         }
-
-        //Bitmap bemp = BitmapFactory.decodeResource(getResources(), R.drawable.abc_list_selector_disabled_holo_light);
         return bitmap;
     }
 

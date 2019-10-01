@@ -23,6 +23,8 @@ public class RNFilterManager extends SimpleViewManager<RNFilterView> {
   public static final int COMMAND_SET_BRIT = 2;
   public static final int COMMAND_SET_CONTR = 3;
   public static final int COMMAND_SET_SATUR = 4;
+  public static final int COMMAND_SET_FILTER = 5;
+  public static final int COMMAND_GEN_FILTERS = 6;
 
 
   private RNFilterContextModule mContextModule;
@@ -75,10 +77,12 @@ public class RNFilterManager extends SimpleViewManager<RNFilterView> {
   public @javax.annotation.Nullable
   Map getExportedCustomDirectEventTypeConstants() {
     return MapBuilder.of(
-            "surfaceCreate",
-            MapBuilder.of("registrationName", "onSurfaceCreate"),
+//            "surfaceCreate",
+//            MapBuilder.of("registrationName", "onSurfaceCreate"),
             "dataReturned",
-            MapBuilder.of("registrationName", "onDataReturned")
+            MapBuilder.of("registrationName", "onDataReturned"),
+            "thumbsReturned",
+            MapBuilder.of("registrationName", "onThumbsReturned")
     );
   }
 
@@ -98,7 +102,11 @@ public class RNFilterManager extends SimpleViewManager<RNFilterView> {
             "setContrast",
             COMMAND_SET_CONTR,
             "setBrightness",
-            COMMAND_SET_BRIT
+            COMMAND_SET_BRIT,
+            "setFilter",
+            COMMAND_SET_FILTER,
+            "generateFilters",
+            COMMAND_GEN_FILTERS
     );
   }
   @Override
@@ -122,7 +130,12 @@ public class RNFilterManager extends SimpleViewManager<RNFilterView> {
         break;
       case COMMAND_SET_SATUR:
         root.setSaturation(args.getDouble(0));
-
+        break;
+      case COMMAND_SET_FILTER:
+        root.setFilter(args.getDouble(0));
+        break;
+      case COMMAND_GEN_FILTERS:
+        root.generateFilters();
         break;
     }
   }

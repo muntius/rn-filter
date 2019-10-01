@@ -21,12 +21,12 @@
     UIImage *editImage;
     UIImage *fullsizeImage;
     UIImage *thumbnailImage;
-
+    
     UIImageView *imageView;
     UITextView *textView;
     
     CIImage * editImageCGImage;
-     CIImage * editThumbCGImage;
+    CIImage * editThumbCGImage;
     
     EAGLContext *_eaglContext;
     CIContext *_cictx;
@@ -45,7 +45,7 @@
     
     NSArray *CIFilterNames;
     NSArray *filterNames;
-
+    
     
 }
 
@@ -58,25 +58,25 @@
         inputBrightness = @0;
         inputContrast = @1;
         CIFilterNames = @[
-                        @"CIPhotoEffectChrome",
-                        @"CIPhotoEffectFade",
-                        @"CIPhotoEffectInstant",
-                        @"CIPhotoEffectNoir",
-                        @"CIPhotoEffectProcess",
-                        @"CIPhotoEffectTonal",
-                        @"CIPhotoEffectTransfer",
-                        @"CISepiaTone"
-                        ];
-       filterNames = @[
-                          @"Chrome",
-                          @"Fade",
-                          @"Instant",
-                          @"Noir",
-                          @"Process",
-                          @"Tonal",
-                          @"Transfer",
-                          @"Sepia"
+                          @"CIPhotoEffectChrome",
+                          @"CIPhotoEffectFade",
+                          @"CIPhotoEffectInstant",
+                          @"CIPhotoEffectNoir",
+                          @"CIPhotoEffectProcess",
+                          @"CIPhotoEffectTonal",
+                          @"CIPhotoEffectTransfer",
+                          @"CISepiaTone"
                           ];
+        filterNames = @[
+                        @"Chrome",
+                        @"Fade",
+                        @"Instant",
+                        @"Noir",
+                        @"Process",
+                        @"Tonal",
+                        @"Transfer",
+                        @"Sepia"
+                        ];
     }
     
     return self;
@@ -95,7 +95,7 @@
     UIImage *image = [UIImage imageWithData: imageData];
     self->image = image;
     UIImage *resizedImage;
-
+    
     if (image.size.width > image.size.height) {
         NSLog(@"Wider");
         resizedImage = [image resizedImageByWidth:(int)self.frame.size.width];
@@ -149,14 +149,7 @@
 
 - (void)layoutSubviews
 {
-    NSLog(@"width after");
-    NSLog(@"self.editImage.size: %f",self.frame.size.width);
-    NSLog(@"height");
-    NSLog(@"self.editImage.size: %f",self.frame.size.height);
     imageView.frame = self.bounds;
-    //  textView.frame = self.bounds;
-    NSLog(@"TEst test");
-    NSLog(@"%@", _src);
     [self calculateRects];
     [self configureImage:_src];
     [self setupGLContext];
@@ -206,9 +199,9 @@
 {
     CIFilter *  filter = [CIFilter filterWithName: [CIFilterNames objectAtIndex:filterId.integerValue]
                               withInputParameters: @{
-                          @"inputImage"      : editImageCGImage
-                          }];
-   [filter setDefaults];
+                                                     @"inputImage"      : editImageCGImage
+                                                     }];
+    [filter setDefaults];
     CIImage *image = [CIImage imageWithCGImage:[self->editImage CGImage]];
     CIImage *resultImage = [filter valueForKey:kCIOutputImageKey];
     [_viewForImage bindDrawable];
@@ -230,14 +223,14 @@
 
 -(void) generateThumbsFilter
 {
-//-(void) generateThumbsFilter
+    //-(void) generateThumbsFilter
     CIContext *context = [CIContext contextWithOptions:nil];
     NSString *path = NSTemporaryDirectory();
     
     
     NSMutableArray *replacementArray = [NSMutableArray arrayWithCapacity:[CIFilterNames count]];
     [CIFilterNames enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-//    NSMutableArray *replacementArray = [NSMutableArray arrayWithCapacity:[CIFilterNames count]];
+        //    NSMutableArray *replacementArray = [NSMutableArray arrayWithCapacity:[CIFilterNames count]];
         CIFilter * filter = [CIFilter filterWithName: obj
                                  withInputParameters: @{
                                                         @"inputImage"      : editThumbCGImage
@@ -256,20 +249,21 @@
         }
         CGImageRelease(img);
         
-        [replacementArray addObject:@{@"uri": filePath,
+        [replacementArray addObject:@{@"id": @(idx).stringValue,
+                                      @"uri": filePath,
                                       @"name": [filterNames objectAtIndex:idx]
                                       }];
     }];
     _onThumbsReturned(@{ @"thumbs": replacementArray });
-
     
-   
+    
+    
 }
 
 - (void)thumbnailWithContentsOfURL:(NSString *)source maxPixelSize:(CGFloat)maxPixelSize
 {
     NSURL *URL = [NSURL URLWithString:source];
-
+    
     CGImageSourceRef imageSource = CGImageSourceCreateWithURL((__bridge CFURLRef)URL, NULL);
     NSAssert(imageSource != NULL, @"cannot create image source");
     
@@ -282,7 +276,7 @@
     CFRelease(imageSource);
     UIImage *result = [[UIImage alloc] initWithCGImage:thumbnail];
     CGImageRelease(thumbnail);
-     self->thumbnailImage = result;
+    self->thumbnailImage = result;
 }
 
 -(void) setSaturation:(NSNumber *)value{
@@ -300,7 +294,7 @@
 
 -(void) setFilter:(nonnull NSNumber *)value{
     [self setPredifinedFilter: value ];
-
+    
 }
 
 -(void) generateFilters{
