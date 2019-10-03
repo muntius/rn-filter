@@ -11,19 +11,29 @@ public class RenderTarget2D
 {
     private int[] fb;
     private int[] depthRb;
-    private int[] renderTex;
+    private int[] renderTex = new int[1];
     //private IntBuffer texBuffer;
     public int Width;
     public int Height;
 
-    public RenderTarget2D(int w, int h)
+    public RenderTarget2D(int w, int h, int TextureId )
     {
-        Width = w; Height = h; generateframebuffer();
+        Width = w;
+        Height = h;
+        renderTex[0] = TextureId;
+        generateframebuffer();
     }
 
-    public int GetTex() {return renderTex[0];}
+    public int GetTex() {
+        Log.d("filterTest:", "GetTex)");
+        Log.d("filterTest:", "GetTex)");
+        Log.d("filterTest:", String.valueOf(renderTex[0]));
+        return renderTex[0];
+    }
     public boolean Set()
     {
+        Log.d("filterTest:", "Set texture ");
+        Log.d("filterTest:", String.valueOf(renderTex[0]));
         GLES20.glViewport(0, 0, Width, Height);
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fb[0]);
         GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_TEXTURE_2D, renderTex[0], 0);
@@ -31,7 +41,7 @@ public class RenderTarget2D
         int status = GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER);
         if (status != GLES20.GL_FRAMEBUFFER_COMPLETE)
             throw (new RuntimeException("SHEE"));
-        GLES20.glClearColor(.0f, .0f, .0f, .0f);
+        GLES20.glClearColor(.0f, .0f, .0f, 1.0f);
         GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
         return true;
     }
@@ -64,7 +74,7 @@ public class RenderTarget2D
         GLES20.glViewport(x, y, w, h);
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
 
-        GLES20.glClearColor(.0f, .0f, .0f, .0f);
+        GLES20.glClearColor(.0f, .0f, .0f, 1.0f);
         GLES20.glClear( GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
     }
 
@@ -72,12 +82,12 @@ public class RenderTarget2D
     {
         fb = new int[1];
         depthRb = new int[1];
-        renderTex = new int[1];
 
         GLES20.glGenFramebuffers(1, fb, 0);
         GLES20.glGenRenderbuffers(1, depthRb, 0);
-        GLES20.glGenTextures(1, renderTex, 0);
-
+//        GLES20.glGenTextures(1, renderTex, 0);
+        Log.d("filterTest:", " generateframebuffer renderTex)");
+        Log.d("filterTest:", String.valueOf(renderTex[0]));
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, renderTex[0]);
 
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S,

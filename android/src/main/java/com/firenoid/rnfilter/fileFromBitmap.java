@@ -22,12 +22,13 @@ public class fileFromBitmap extends AsyncTask<Void, Integer, String> {
 
     Context context;
     Bitmap bitmap;
-    String path_external = Environment.getExternalStorageDirectory() + File.separator + "temporary_file.jpg";
     File file;
+    int mViewId;
 
-    public fileFromBitmap(Bitmap bitmap, Context context) {
+    public fileFromBitmap(Bitmap bitmap, int viewId,  Context context) {
         this.bitmap = bitmap;
         this.context= context;
+        this.mViewId= viewId;
     }
 
     @Override
@@ -43,7 +44,7 @@ public class fileFromBitmap extends AsyncTask<Void, Integer, String> {
 
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-        file = new File(context.getCacheDir(), "temporary_file.jpg");
+        file = new File(context.getCacheDir(), "temporary_thumbnail.jpg");
         try {
             FileOutputStream fo = new FileOutputStream(file);
             fo.write(bytes.toByteArray());
@@ -65,18 +66,16 @@ public class fileFromBitmap extends AsyncTask<Void, Integer, String> {
         // exp; make progressbar gone
         Log.d("Strings", "Strings");
         Log.d("Strings", file.getAbsolutePath());
-//        sendFile(file);
-//        final ReactContext reactContext = (ReactContext) context;
-//        reactContext.runOnJSQueueThread(new Runnable() {
-//            @Override
-//            public void run() {
-//                WritableMap arg = Arguments.createMap();
-//                arg.putInt("ctxId", ctxId);
-//                reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(context.getCu, "thumbsReturned", arg);
-//////                this.source = source;
-//
-//
-//            }
-//        });
+
+
+        final ReactContext reactContext = (ReactContext) context;
+        reactContext.runOnJSQueueThread(new Runnable() {
+            @Override
+            public void run() {
+                WritableMap map = Arguments.createMap();
+                map.putString("thumbs", "file://" + file.getAbsolutePath());
+                reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(mViewId, "thumbsReturned", map);
+            }
+        });
     }
 }

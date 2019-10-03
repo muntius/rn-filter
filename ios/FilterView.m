@@ -249,7 +249,7 @@
         }
         CGImageRelease(img);
         
-        [replacementArray addObject:@{@"id": @(idx).stringValue,
+        [replacementArray addObject:@{@"id": @(idx).stringValuesa,
                                       @"uri": filePath,
                                       @"name": [filterNames objectAtIndex:idx]
                                       }];

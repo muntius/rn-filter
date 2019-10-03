@@ -48,19 +48,22 @@ public class RNFilterManager extends SimpleViewManager<RNFilterView> {
 
   @ReactProp(name = "src")
   public void setSrc(RNFilterView view, @Nullable String sources) {
-    Log.d("React:", "source before");
-    Log.d("React:", String.valueOf( sources ));
+//    Log.d("React:", "source before");
+//    Log.d("React:", String.valueOf( sources ));
     view.setSource(sources);
   }
 
 
+  @ReactProp(name = "filter")
+  public void filter(RNFilterView view, @Nullable double id) {
+    view.setFilter(id);
+  }
 
 
-
-//  @ReactProp(name = "saturation")
-//  public void setSaturation(RNFilterView view, @Nullable float progress) {
-//    view.setSaturation(progress);
-//  }
+  @ReactProp(name = "thumbnail")
+  public void filter(RNFilterView view, @Nullable boolean value) {
+    view.setThumbnail(value);
+  }
 
 //  @ReactProp(name = "contrast")
 //  public void setContrast(RNFilterView view, @Nullable float progress) {
@@ -135,7 +138,7 @@ public class RNFilterManager extends SimpleViewManager<RNFilterView> {
         root.setFilter(args.getDouble(0));
         break;
       case COMMAND_GEN_FILTERS:
-        root.generateFilters();
+//        root.generateFilters();
         break;
     }
   }
