@@ -2,7 +2,6 @@
 import React, { PureComponent } from 'react';
 import {requireNativeComponent, NativeModules, UIManager, findNodeHandle } from 'react-native';
 import PropTypes from 'prop-types';
-import Reactotron from 'reactotron-react-native'
 
 export default class FilterView extends PureComponent {
 
@@ -68,10 +67,6 @@ export default class FilterView extends PureComponent {
                 this.genFilters,
                 [ ]
           );
-        //   } ).catch( error => { Reactotron.log( 'caught', error ); } );
-        //   return promise;
-
-
     }
 
     onThumbsReturned = ({
@@ -79,9 +74,6 @@ export default class FilterView extends PureComponent {
       }: {
         nativeEvent: { thumbs: thumbs }
       }) => {
-        Reactotron.log( "thumbs" );
-        Reactotron.log( thumbs );
-        Reactotron.log( thumbs.length );
         if(thumbs){
         this.props.onThumbsRecevied(thumbs)
         }
@@ -90,13 +82,12 @@ export default class FilterView extends PureComponent {
 
     
     render() {
-        console.log('====================================');
-        console.log(this.props);
-        console.log('====================================');
         return (
             <RNFilter
                 style={ this.props.style }
                 src={this.props.src}
+                thumbnail={this.props.thumbnail}
+                filter={this.props.filter}
                 ref={ref => this.filterRef = ref}
                 onDataReturned={this.onDataReturned}
                 onThumbsReturned={this.onThumbsReturned}
