@@ -10,8 +10,8 @@
                 value:(nonnull NSNumber*) value;
 -(void) setContrast:(nonnull NSNumber*) reactTag
                 value:(nonnull NSNumber*) value;
--(void) setFilter:(nonnull NSNumber*) reactTag
-              value:(nonnull NSNumber*) value;
--(void) generateFilters:(nonnull NSNumber*) reactTag;
+-(void) capture:(nonnull NSNumber*) reactTag
+            width:(nonnull NSNumber*) width
+            height:(nonnull NSNumber*) height;
 
 @end

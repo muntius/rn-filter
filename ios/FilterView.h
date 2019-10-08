@@ -26,8 +26,9 @@
 -(void) setSaturation:(NSNumber *)value;
 -(void) setBrightness:(NSNumber *)value;
 -(void) setContrast:(NSNumber *)value;
--(void) setFilter:(nonnull NSNumber *)value;
--(void) generateFilters;
+-(void) setVignette:(nonnull NSNumber *)value;
+-(void) setBlur:(nonnull NSNumber *)value;
+-(void) takeShot:(nonnull NSNumber *)width height:(nonnull NSNumber *)height;
 
 
 //@property (nonatomic, copy) RCTDirectEventBlock onSurfaceCreate;

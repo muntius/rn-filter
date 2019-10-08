@@ -20,12 +20,12 @@ import java.io.IOException;
 
 public class fileFromBitmap extends AsyncTask<Void, Integer, String> {
 
-    Context context;
+    ThemedReactContext context;
     Bitmap bitmap;
     File file;
     int mViewId;
 
-    public fileFromBitmap(Bitmap bitmap, int viewId,  Context context) {
+    public fileFromBitmap(Bitmap bitmap, int viewId,  ThemedReactContext context) {
         this.bitmap = bitmap;
         this.context= context;
         this.mViewId= viewId;
@@ -67,15 +67,8 @@ public class fileFromBitmap extends AsyncTask<Void, Integer, String> {
         Log.d("Strings", "Strings");
         Log.d("Strings", file.getAbsolutePath());
 
-
-        final ReactContext reactContext = (ReactContext) context;
-        reactContext.runOnJSQueueThread(new Runnable() {
-            @Override
-            public void run() {
                 WritableMap map = Arguments.createMap();
                 map.putString("thumbs", "file://" + file.getAbsolutePath());
-                reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(mViewId, "thumbsReturned", map);
+                context.getJSModule(RCTEventEmitter.class).receiveEvent(mViewId, "thumbsReturned", map);
             }
-        });
-    }
 }

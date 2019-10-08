@@ -23,6 +23,8 @@ RCT_EXPORT_VIEW_PROPERTY(src, NSString);
 
 //RCT_EXPORT_VIEW_PROPERTY(onSurfaceCreate, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onThumbsReturned, RCTBubblingEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onDataReturned, RCTBubblingEventBlock)
+
 
 - (UIView *)view
 {
@@ -84,7 +86,7 @@ RCT_EXPORT_METHOD(
 
 
 RCT_EXPORT_METHOD(
-                  setFilter:(nonnull NSNumber*) reactTag
+                  setVignette:(nonnull NSNumber*) reactTag
                   value:(nonnull NSNumber*) value ) {
     
     [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
@@ -94,15 +96,16 @@ RCT_EXPORT_METHOD(
             return;
         }
         dispatch_async(dispatch_get_main_queue(), ^{
-            [view setFilter:value];
+            [view setVignette:value];
         });
     }];
     
 }
 
+
 RCT_EXPORT_METHOD(
-                  generateFilters:(nonnull NSNumber*) reactTag
-                  ) {
+                  setBlur:(nonnull NSNumber*) reactTag
+                  value:(nonnull NSNumber*) value ) {
     
     [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
         FilterView *view = (FilterView *)viewRegistry[reactTag];
@@ -111,10 +114,26 @@ RCT_EXPORT_METHOD(
             return;
         }
         dispatch_async(dispatch_get_main_queue(), ^{
-            [view generateFilters];
+            [view setBlur:value];
         });
     }];
     
+}
+
+RCT_EXPORT_METHOD(
+                  capture:(nonnull NSNumber*) reactTag
+                  width:(nonnull NSNumber*) width
+                  height:(nonnull NSNumber*) height ) {
+    [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
+        FilterView *view = (FilterView *)viewRegistry[reactTag];
+        if (!view || ![view isKindOfClass:[FilterView class]]) {
+            RCTLogError(@"Cannot find NativeView with tag #%@", reactTag);
+            return;
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [view takeShot:width height:height];
+        });
+    }];
 }
 
 

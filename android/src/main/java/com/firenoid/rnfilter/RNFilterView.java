@@ -2,25 +2,18 @@ package com.firenoid.rnfilter;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
+import com.facebook.react.uimanager.ThemedReactContext;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.media.MediaScannerConnection;
+import android.graphics.Matrix;
 import android.media.effect.Effect;
 import android.media.effect.EffectContext;
-import android.media.effect.EffectFactory;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Log;
 
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -28,9 +21,6 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -40,21 +30,13 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.ReactContext;
-import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.bridge.WritableNativeArray;
-import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
-import com.firenoid.rnfilter.Filters;
 
 public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Renderer {
 
-    public static final int COMMAND_CAPTURE_CURRENT_VIEW = 3;
-
-
     private Activity mActivity;
-    private Context mContext;
+    private ThemedReactContext mContext;
 
 
     private int mShaderProgramBase;
@@ -92,13 +74,15 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
     public float mSaturationValue = 1f;
     public float mContrastValue = 1f;
     public float mBrightnessValue = 1f;
-    private volatile boolean saveFrame;
+    public volatile boolean saveFrame;
+    public int widthImage;
+    public int heightImage;
+
 
     public Bitmap toLoad = null;
     public Bitmap originalBitmap = null;
     public Bitmap currentBitmap = null;
     public Bitmap thumbnailBitmap = null;
-    public int currentFilterId;
     public boolean IsUsedBitmap()
     {
         return !default_b;
@@ -165,7 +149,7 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
                     1.0f, 1.0f
             };
 
-    public RNFilterView(Context context, Activity activity) {
+    public RNFilterView(ThemedReactContext context, Activity activity) {
         super(context);
         mActivity = activity;
         mContext = context;
@@ -199,10 +183,6 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
         this.requestRender();
     }
     public void setFilter(double value) {
-        preFilter = true;
-        currentFilterId = (int)value;
-
-        this.requestRender();
     }
     public void setThumbnail(boolean value) {
         isThumbnail = value;
@@ -214,132 +194,7 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
         new fileFromBitmap(this.thumbnailBitmap, getId()  , mContext).execute();
     }
 
-    private void initEffect() {
-        EffectFactory effectFactory = mEffectContext.getFactory();
-        if (mEffect != null) {
-            mEffect.release();
-        }
-        /**
-         * Initialize the correct effect based on the selected menu/action item
-         */
-        switch (currentFilterId) {
 
-            case 0:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_AUTOFIX);
-                break;
-            case 1:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_AUTOFIX);
-                mEffect.setParameter("scale", 0.7f);
-                break;
-
-            case 2:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_BLACKWHITE);
-                mEffect.setParameter("black", .1f);
-                mEffect.setParameter("white", .7f);
-                break;
-
-            case 3:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_BRIGHTNESS);
-                mEffect.setParameter("brightness", 2.0f);
-                break;
-
-            case 4:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_CONTRAST);
-                mEffect.setParameter("contrast", 1.4f);
-                break;
-
-            case 5:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_CROSSPROCESS);
-                break;
-
-            case 6:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_DOCUMENTARY);
-                break;
-
-            case 7:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_DUOTONE);
-                mEffect.setParameter("first_color", Color.YELLOW);
-                mEffect.setParameter("second_color", Color.DKGRAY);
-                break;
-
-            case 8:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_FILLLIGHT);
-                mEffect.setParameter("strength", .8f);
-                break;
-
-            case 9:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_FISHEYE);
-                mEffect.setParameter("scale", .5f);
-                break;
-            case 10:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_FLIP);
-                mEffect.setParameter("horizontal", true);
-                break;
-
-            case 11:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_GRAIN);
-                mEffect.setParameter("strength", 1.0f);
-                break;
-
-            case 12:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_GRAYSCALE);
-                break;
-
-            case 13:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_LOMOISH);
-                break;
-
-            case 14:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_NEGATIVE);
-                break;
-
-            case 15:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_POSTERIZE);
-                break;
-
-            case 16:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_ROTATE);
-                mEffect.setParameter("angle", 180);
-                break;
-
-            case 17:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_SATURATE);
-                mEffect.setParameter("scale", .5f);
-                break;
-
-            case 18:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_SEPIA);
-                break;
-
-            case 19:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_SHARPEN);
-                break;
-
-            case 20:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_TEMPERATURE);
-                mEffect.setParameter("scale", .9f);
-                break;
-
-            case 21:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_TINT);
-                mEffect.setParameter("tint", Color.MAGENTA);
-                break;
-
-            case 22:
-                mEffect = effectFactory.createEffect(EffectFactory.EFFECT_VIGNETTE);
-                mEffect.setParameter("scale", .5f);
-                break;
-
-            default:
-                break;
-
-        }
-    }
-
-    private void applyEffect() {
-
-        mEffect.apply(hToFilterTexture[0], mImageWidth, mImageHeigth, hToFilterTexture[1]);
-    }
 
     public void onSurfaceCreated(GL10 unused, EGLConfig config)
     {
@@ -365,10 +220,7 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
             IB.put(indices); IB.position(0);
             TC.put(texCoords); TC.position(0);
             loadShaders();
-                LoadBitmap(this.originalBitmap);
-                if(!isThumbnail){
-                    generaThumbnail();
-                }
+            LoadBitmap(this.originalBitmap);
             }
 
     }
@@ -402,26 +254,20 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
 
             didRender = false;
             firstRender = true;
-            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
-//            if(currentFilterId != 0) {
-                initEffect();
-                applyEffect();
-//            }
-//            drawquad();
-            if (!isThumbnail)
-            {
+                GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
                 GLES20.glViewport(0, 0, mImageWidth, mImageHeigth);
                 GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fb[0]);
-                GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_TEXTURE_2D,  hToFilterTexture[2], 0);
+                GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_TEXTURE_2D,  hToFilterTexture[1], 0);
                 GLES20.glFramebufferRenderbuffer(GLES20.GL_FRAMEBUFFER, GLES20.GL_DEPTH_ATTACHMENT, GLES20.GL_RENDERBUFFER, depthRb[0]);
                 int status = GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER);
                 if (status != GLES20.GL_FRAMEBUFFER_COMPLETE)
                     throw (new RuntimeException("SHEE"));
                 GLES20.glClearColor(.0f, .0f, .0f, 1.0f);
                 GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
+
                 GLES20.glUseProgram(mShaderProgramContrastSaturationBrightness);
                 setVSParams(mShaderProgramContrastSaturationBrightness);
-                setShaderParamPhoto(mShaderProgramContrastSaturationBrightness, hToFilterTexture[1]);
+                setShaderParamPhoto(mShaderProgramContrastSaturationBrightness, hToFilterTexture[0]);
                 int sat = GLES20.glGetUniformLocation(mShaderProgramContrastSaturationBrightness, "Saturation");
                 int br = GLES20.glGetUniformLocation(mShaderProgramContrastSaturationBrightness, "Brightness");
                 int ctr = GLES20.glGetUniformLocation(mShaderProgramContrastSaturationBrightness, "Contrast");
@@ -429,105 +275,35 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
                 GLES20.glUniform1f(br, mBrightnessValue);
                 GLES20.glUniform1f(ctr, mContrastValue);
                 drawquad();
-            }
-//            int tx;
-//            if (didRender)
-//                firstRender = false;
-//            first = !first;
-//            if(currentFilterId != 0){
-            int tx = !isThumbnail ?  hToFilterTexture[2] : hToFilterTexture[1];
-//            } else {
-//                tx =  hToFilterTexture[0];
-//            }
 
-            GLES20.glViewport(cmp_X, cmp_Y, cmp_W, cmp_H);
-            GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
-            GLES20.glClearColor(.0f, .0f, .0f, 1.0f);
-            GLES20.glClear( GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
-            GLES20.glUseProgram(mShaderProgramFinalPass);
-            setVSParams(mShaderProgramFinalPass);
-            setShaderParamPhoto(mShaderProgramFinalPass, tx);
-            drawquad();
-            shallRenderImage = false;
+                int tx = hToFilterTexture[1];
+                GLES20.glViewport(cmp_X, cmp_Y, cmp_W, cmp_H);
+                GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+                GLES20.glClearColor(.0f, .0f, .0f, 1.0f);
+                GLES20.glClear( GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
+                GLES20.glUseProgram(mShaderProgramFinalPass);
+                setVSParams(mShaderProgramFinalPass);
+                setShaderParamPhoto(mShaderProgramFinalPass, tx);
+                drawquad();
+                shallRenderImage = false;
 
 
-//        if (SaveImage) {
-//            SaveImage = false;
-//
-//
-////            mActivity.toastHandler.post(mActivity.loadingRunnableShow);
-//
-//            saveTarget.Set();
-//            GLES20.glUseProgram(mShaderProgramFinalPass);
-//            setVSParams(mShaderProgramFinalPass);
-//            setShaderParamPhoto(mShaderProgramFinalPass, tx);
-//            drawquad();
-//
-//            saveTarget.pfsave();
-//            int wd = saveTarget.Width;
-//            int hg = saveTarget.Height;
-//
-//            int screenshotSize = wd * hg;
-//            ByteBuffer bb = ByteBuffer.allocateDirect(screenshotSize * 4);
-//            bb.order(ByteOrder.nativeOrder());
-//            GLES20.glReadPixels(0, 0, wd, hg, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, bb);
-//            int pixelsBuffer[] = new int[screenshotSize];
-//            bb.asIntBuffer().get(pixelsBuffer);
-//            bb = null;
-//            Bitmap bitmap = Bitmap.createBitmap(wd, hg, Bitmap.Config.RGB_565);
-//            bitmap.setPixels(pixelsBuffer, screenshotSize - wd, -wd, 0, 0, wd, hg);
-//            pixelsBuffer = null;
-//
-//            short sBuffer[] = new short[screenshotSize];
-//            ShortBuffer sb = ShortBuffer.wrap(sBuffer);
-//            bitmap.copyPixelsToBuffer(sb);
-//
-//            for (int i = 0; i < screenshotSize; ++i) {
-//                short v = sBuffer[i];
-//                sBuffer[i] = (short) (((v & 0x1f) << 11) | (v & 0x7e0) | ((v & 0xf800) >> 11));
-//            }
-//            sb.rewind();
-//            bitmap.copyPixelsFromBuffer(sb);
-//
-//
-//            File file = new File(SavePath);
-//
-//            FileOutputStream fOut = null;
-//            try {
-//                fOut = new FileOutputStream(file);
-//            } catch (FileNotFoundException e) {
-//                e.printStackTrace();
-//            }
-//            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, fOut);
-//
-//            //call media scanner to show the new picture in the gallery
-//
-//            MediaScannerConnection.scanFile(
-//                    mActivity,
-//                    new String[]{SavePath},
-//                    null,
-//                    new MediaScannerConnection.OnScanCompletedListener() {
-//                        @Override
-//                        public void onScanCompleted(String path, Uri uri) {
-//                            Log.v("CO2 Photo Editor ",
-//                                    "file " + path + " was scanned seccessfully: " + uri);
-//                        }
-//                    });
-//            try {
-//                fOut.flush();
-//                fOut.close();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-////            MainActivity.toastHandler.post(MainActivity.toastRunnable);
-////            MainActivity.toastHandler.post(MainActivity.loadingRunnableDismiss);
-//        }
+        if (SaveImage) {
+            SaveImage = false;
+
+
+//            mActivity.toastHandler.post(mActivity.loadingRunnableShow);
+
+            saveBitmap(takeScreenshot(unused));
+
+//            MainActivity.toastHandler.post(MainActivity.toastRunnable);
+//            MainActivity.toastHandler.post(MainActivity.loadingRunnableDismiss);
+        }
 
 
     }
 
-    private void generateframebuffer(int textId)
-    {
+    private void generateframebuffer(int textId) {
         fb = new int[1];
         depthRb = new int[1];
 
@@ -561,8 +337,7 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
 
 
     private int createprogram(String fssource) { return createprogram(generalVS, fssource);}
-    private int createprogram(String vssource, String fssource)
-    {
+    private int createprogram(String vssource, String fssource) {
         int toRet;
         toRet = GLES20.glCreateProgram();
         GLES20.glAttachShader(toRet, compileshader(GLES20.GL_VERTEX_SHADER, vssource));
@@ -571,8 +346,7 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
         return toRet;
     }
 
-    private int compileshader(int type, String shaderCode)
-    {
+    private int compileshader(int type, String shaderCode) {
         int shader = GLES20.glCreateShader(type);
         GLES20.glShaderSource(shader, shaderCode);
         GLES20.glCompileShader(shader);
@@ -584,8 +358,7 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
         return shader;
     }
 
-    private void loadShaders()
-    {
+    private void loadShaders() {
 
         //BASE SHADER
         String baseshader_FS =
@@ -707,8 +480,7 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
 
 
 
-    public void LoadBitmap(Bitmap bmp)
-    {
+    public void LoadBitmap(Bitmap bmp) {
         if (!startup && default_b) default_b = false;
         startup = false;
         if ((bmp.getHeight()*bmp.getWidth())>=7900001) { //if pic bigger then 8Mpx resize to 8Mpx
@@ -724,16 +496,14 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
         this.BOOL_LoadTexture = true;
         this.thumbnailBitmap = Bitmap.createScaledBitmap(bmp, (int)120, (int)120, true);
     }
-    public void LoadTexture(Bitmap bmp)
-    {
+    public void LoadTexture(Bitmap bmp) {
         this.mImageHeigth = bmp.getHeight();
         this.mImageWidth = bmp.getWidth();
         this.hToFilterTexture = loadTexture(bmp);
-        generateframebuffer(hToFilterTexture[2]);
+        generateframebuffer(hToFilterTexture[1]);
         this.Render();
     }
-    private int[] loadTexture(Bitmap bitmap)
-    {
+    private int[] loadTexture(Bitmap bitmap) {
         final int[] textureHandle = new int[3];
         GLES20.glGenTextures(3, textureHandle, 0);
         if (textureHandle[0] == 0)throw(new RuntimeException("error generating t"));
@@ -746,11 +516,60 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
         return textureHandle;
     }
 
-    public void SaveImage(String location)
-    {
+    public void SaveImage(String location) {
         this.SaveImage = true;
         this.SavePath = location;
     }
 
+
+    public Bitmap takeScreenshot(GL10 mGL) {
+        final int mWidth = this.getWidth();
+        final int mHeight = this.getHeight();
+        IntBuffer ib = IntBuffer.allocate(mWidth * mHeight);
+        IntBuffer ibt = IntBuffer.allocate(mWidth * mHeight);
+        mGL.glReadPixels(0, 0, mWidth, mHeight, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, ib);
+
+        // Convert upside down mirror-reversed image to right-side up normal image.
+        for (int i = 0; i < mHeight; i++) {
+            for (int j = 0; j < mWidth; j++) {
+                ibt.put((mHeight - i - 1) * mWidth + j, ib.get(i * mWidth + j));
+            }
+        }
+        Bitmap mBitmap = Bitmap.createBitmap(mWidth, mHeight,Bitmap.Config.ARGB_8888);
+        mBitmap.copyPixelsFromBuffer(ibt);
+        mBitmap = getResizedBitmap(mBitmap, mWidth, mHeight);
+
+        return mBitmap;
+    }
+
+    public Bitmap getResizedBitmap(Bitmap bm, int width, int height) {
+        float scaleWidth = ((float) widthImage) / width;
+        float scaleHeight = ((float) heightImage) / height;
+        Matrix matrix = new Matrix();
+        matrix.postScale(scaleWidth, scaleHeight);
+        Bitmap resizedBitmap = Bitmap.createBitmap(
+                bm, 0, 0, width, height, matrix, false);
+        bm.recycle();
+        return resizedBitmap;
+    }
+
+
+    private void saveBitmap(Bitmap bitmap) {
+        try {
+            String now = String.valueOf(System.currentTimeMillis());
+            String mPath = this.getContext().getCacheDir() + "/" + now + ".jpg";
+            File imageFile = new File(mPath);
+            FileOutputStream outputStream = new FileOutputStream(imageFile);
+            int quality = 100;
+            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
+            outputStream.flush();
+            outputStream.close();
+            WritableMap arg = Arguments.createMap();
+            arg.putString("url", "file://" + imageFile.getCanonicalPath());
+            mContext.getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "dataReturned", arg);
+        } catch (Exception e) {
+            Log.e("TAG", e.toString(), e);
+        }
+    }
 
 }

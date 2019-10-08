@@ -27,21 +27,35 @@
     
     CIImage * editImageCGImage;
     CIImage * editThumbCGImage;
+    CIImage *resultImage;
     
     EAGLContext *_eaglContext;
     CIContext *_cictx;
     GLKView *_viewForImage;
     
     BOOL isEditing;
+    BOOL SatFilter;
+    BOOL BritFilter;
+    BOOL ContFilter;
+
+    BOOL BlurFilter;
+    BOOL VignetteFilter;
     CALayer *filterLayer;
     
     CGRect RectImageView;
     CGRect glkViewRect;
     
+    NSNumber *inputSaturationDefault;
+    NSNumber *inputBrightnessDefault;
+    NSNumber *inputContrastDefault;
+    NSNumber *inputBlurDefault;
+    NSNumber *inputVignetteDefault;
+    
     NSNumber *inputSaturation;
     NSNumber *inputBrightness;
     NSNumber *inputContrast;
-    
+    NSNumber *inputBlur;
+    NSNumber *inputVignette;
     
     NSArray *CIFilterNames;
     NSArray *filterNames;
@@ -54,29 +68,17 @@
 - (instancetype)init
 {
     if ((self = [super init])) {
+        inputSaturationDefault = @1;
+        inputBrightnessDefault = @0;
+        inputContrastDefault = @1;
+        inputVignetteDefault  = @0;
+        inputBlurDefault = @0.02;
+        
         inputSaturation = @1;
         inputBrightness = @0;
         inputContrast = @1;
-        CIFilterNames = @[
-                          @"CIPhotoEffectChrome",
-                          @"CIPhotoEffectFade",
-                          @"CIPhotoEffectInstant",
-                          @"CIPhotoEffectNoir",
-                          @"CIPhotoEffectProcess",
-                          @"CIPhotoEffectTonal",
-                          @"CIPhotoEffectTransfer",
-                          @"CISepiaTone"
-                          ];
-        filterNames = @[
-                        @"Chrome",
-                        @"Fade",
-                        @"Instant",
-                        @"Noir",
-                        @"Process",
-                        @"Tonal",
-                        @"Transfer",
-                        @"Sepia"
-                        ];
+        inputVignette  = @1;
+        inputBlur = @0.02;
     }
     
     return self;
@@ -97,18 +99,15 @@
     UIImage *resizedImage;
     
     if (image.size.width > image.size.height) {
-        NSLog(@"Wider");
         resizedImage = [image resizedImageByWidth:(int)self.frame.size.width];
     }
     else
     {
-        //NSLog(@"Taller");
         resizedImage = [image resizedImageByHeight:(int)self.frame.size.width];
     }
     NSString *resizeString = [NSString stringWithFormat:@"%ix%i#",(int)self.frame.size.width,(int)self.frame.size.width];
     UIImage *editResizedImage = [image resizedImage:resizeString];
     self->editImage = editResizedImage;
-    [self thumbnailWithContentsOfURL: imageUrl  maxPixelSize:(CGFloat) 100];
     
 }
 
@@ -154,151 +153,136 @@
     [self configureImage:_src];
     [self setupGLContext];
     
-    //   [self UpdateInputParameters];
+    //   [self UpdateColorInputs];
 }
 
 
--(void)UpdateInputParameters
+-(void)UpdateColorInputs:(NSString *)filterName
 {
-    CIFilter *filter = [CIFilter filterWithName: @"CIColorControls"
-                            withInputParameters: @{
-                                                   @"inputImage"      : editImageCGImage,
-                                                   @"inputSaturation" : inputSaturation,
-                                                   @"inputBrightness" : inputBrightness,
-                                                   @"inputContrast"   : inputContrast
-                                                   }];
-    CIImage *image = [CIImage imageWithCGImage:[self->editImage CGImage]];
-    CIImage *resultImage = [filter valueForKey:kCIOutputImageKey];
+    
+    CIFilter *filter;
+    CIImage *currentImage = editImageCGImage;
+    if(SatFilter || BritFilter || ContFilter){
+        filter = [CIFilter filterWithName: @"CIColorControls"
+                      withInputParameters: @{
+                                             @"inputImage"      : editImageCGImage,
+                                             @"inputSaturation" : inputSaturation,
+                                             @"inputBrightness" : inputBrightness,
+                                             @"inputContrast"   : inputContrast
+                                             }];
+        currentImage = [filter valueForKey:kCIOutputImageKey];
+    }
+    if(BlurFilter){
+        filter = [CIFilter filterWithName: @"CINoiseReduction"
+                      withInputParameters: @{
+                                             @"inputImage"      : currentImage,
+                                             @"inputNoiseLevel" : inputBlur
+                                             }];
+        currentImage = [filter valueForKey:kCIOutputImageKey];
+    }
+    if(VignetteFilter){
+        filter = [CIFilter filterWithName: @"CIVignette"
+                      withInputParameters: @{
+                                             @"inputImage"      : currentImage,
+                                             @"inputIntensity" : @1,
+                                             @"inputRadius"   : inputVignette
+                                             }];
+        currentImage = [filter valueForKey:kCIOutputImageKey];
+    }
+   
     [_viewForImage bindDrawable];
     if (_eaglContext != [EAGLContext currentContext]) {
         [EAGLContext setCurrentContext:_eaglContext];
     }
+    
+    
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    CGRect extentRect = [image extent];
+    CGRect extentRect = [editImageCGImage extent];
     if (CGRectIsInfinite(extentRect) || CGRectIsEmpty(extentRect)) {
         extentRect = _viewForImage.bounds;
     }
-    [_cictx drawImage:resultImage inRect:CGRectMake(0.0, 0.0,_viewForImage.drawableWidth,_viewForImage.drawableHeight) fromRect:extentRect];
+    [_cictx drawImage:currentImage inRect:CGRectMake(0.0, 0.0,_viewForImage.drawableWidth,_viewForImage.drawableHeight) fromRect:extentRect];
     [_viewForImage display];
-}
-
-//Photo effect Fade
-//Photo effect Instant
-//Photo effect Mono
-//Photo effect Noir
-//MonoChrome 1 
-//Posterize 1 
-
-
-
-
--(void) setPredifinedFilter:(NSNumber*)filterId
-{
-    CIFilter *  filter = [CIFilter filterWithName: [CIFilterNames objectAtIndex:filterId.integerValue]
-                              withInputParameters: @{
-                                                     @"inputImage"      : editImageCGImage
-                                                     }];
-    [filter setDefaults];
-    CIImage *image = [CIImage imageWithCGImage:[self->editImage CGImage]];
-    CIImage *resultImage = [filter valueForKey:kCIOutputImageKey];
-    [_viewForImage bindDrawable];
-    if (_eaglContext != [EAGLContext currentContext]) {
-        [EAGLContext setCurrentContext:_eaglContext];
-    }
-    glClearColor(0.0, 0.0, 0.0, 0.0);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    CGRect extentRect = [image extent];
-    if (CGRectIsInfinite(extentRect) || CGRectIsEmpty(extentRect)) {
-        extentRect = _viewForImage.bounds;
-    }
-    [_cictx drawImage:resultImage inRect:CGRectMake(0.0, 0.0,_viewForImage.drawableWidth,_viewForImage.drawableHeight) fromRect:extentRect];
-    [_viewForImage display];
-}
-
-
--(void) generateThumbsFilter
-{
-    //-(void) generateThumbsFilter
-    CIContext *context = [CIContext contextWithOptions:nil];
-    NSString *path = NSTemporaryDirectory();
-    
-    
-    NSMutableArray *replacementArray = [NSMutableArray arrayWithCapacity:[CIFilterNames count]];
-    [CIFilterNames enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-        //    NSMutableArray *replacementArray = [NSMutableArray arrayWithCapacity:[CIFilterNames count]];
-        CIFilter * filter = [CIFilter filterWithName: obj
-                                 withInputParameters: @{
-                                                        @"inputImage"      : editThumbCGImage
-                                                        }];
-        [filter setDefaults];
-        CIImage *finalImage = [filter valueForKey:kCIOutputImageKey];
-        CGImageRef img = [context createCGImage:finalImage fromRect:[finalImage extent]];
-        UIImage *thumbnailResult = [[UIImage alloc] initWithCGImage:img];
-        NSString *filePath = [path stringByAppendingPathComponent: [NSString stringWithFormat:@"%@%@", [[NSUUID UUID] UUIDString] , @".jpeg"]]  ;
-        NSData *dataForJPEGFile = UIImageJPEGRepresentation(thumbnailResult, 1.0);
-        NSError *error2 = nil;
-        if (![dataForJPEGFile writeToFile:filePath options:NSAtomicWrite error:&error2])
-        {
-            NSLog(@"%s", "Errrorrrrr");
-            NSLog(@"%@", error2);
-        }
-        CGImageRelease(img);
-        
-        [replacementArray addObject:@{@"id": @(idx).stringValue,
-                                      @"uri": filePath,
-                                      @"name": [filterNames objectAtIndex:idx]
-                                      }];
-    }];
-    _onThumbsReturned(@{ @"thumbs": replacementArray });
-    
-    
-    
-}
-
-- (void)thumbnailWithContentsOfURL:(NSString *)source maxPixelSize:(CGFloat)maxPixelSize
-{
-    NSURL *URL = [NSURL URLWithString:source];
-    
-    CGImageSourceRef imageSource = CGImageSourceCreateWithURL((__bridge CFURLRef)URL, NULL);
-    NSAssert(imageSource != NULL, @"cannot create image source");
-    
-    NSDictionary *imageOptions = @{
-                                   (NSString const *)kCGImageSourceCreateThumbnailFromImageIfAbsent : (NSNumber const *)kCFBooleanTrue,
-                                   (NSString const *)kCGImageSourceThumbnailMaxPixelSize            : @(maxPixelSize),
-                                   (NSString const *)kCGImageSourceCreateThumbnailWithTransform     : (NSNumber const *)kCFBooleanTrue
-                                   };
-    CGImageRef thumbnail = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, (__bridge CFDictionaryRef)imageOptions);
-    CFRelease(imageSource);
-    UIImage *result = [[UIImage alloc] initWithCGImage:thumbnail];
-    CGImageRelease(thumbnail);
-    self->thumbnailImage = result;
 }
 
 -(void) setSaturation:(NSNumber *)value{
     inputSaturation = value;
-    [self UpdateInputParameters];
+    if(![value isEqualToNumber:inputSaturationDefault]){
+
+         SatFilter= true;
+    } else {
+         SatFilter= false;
+    }
+    [self UpdateColorInputs:@"SBC"];
 }
 -(void) setBrightness:(NSNumber *)value{
     inputBrightness = value;
-    [self UpdateInputParameters];
+    if(![value isEqualToNumber:inputBrightnessDefault]){
+
+        BritFilter= true;
+    } else {
+        BritFilter= false;
+    }
+    
+    [self UpdateColorInputs:@"SBC"];
 }
 -(void) setContrast:(NSNumber *)value{
     inputContrast = value;
-    [self UpdateInputParameters];
+    if(![value isEqualToNumber:inputContrastDefault]){
+         ContFilter= true;
+    } else {
+         ContFilter= false;
+    }
+    [self UpdateColorInputs:@"SBC"];
 }
 
--(void) setFilter:(nonnull NSNumber *)value{
-    [self setPredifinedFilter: value ];
+-(void) setBlur:(NSNumber *)value{
+    inputBlur = value;
     
+    if(![value isEqualToNumber:inputBlurDefault]){
+        BlurFilter = true;
+    } else {
+        BlurFilter = false;
+    }
+    [self UpdateColorInputs:@"Blur"];
 }
 
--(void) generateFilters{
-    [self generateThumbsFilter];
+-(void) setVignette:(NSNumber *)value{
+    inputVignette = value;
+    if(![value isEqualToNumber:inputVignetteDefault]){
+        VignetteFilter = true;
+    } else {
+        VignetteFilter = false;
+    }
+    [self UpdateColorInputs:@"Vignette"];
+}
+
+-(void) takeShot: (NSNumber *)width height:(NSNumber *)height {
+    UIGraphicsBeginImageContextWithOptions(_viewForImage.bounds.size, YES, 0);
+    [_viewForImage drawViewHierarchyInRect:_viewForImage.bounds afterScreenUpdates:YES];
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
+    CGSize newSize = CGSizeMake([height doubleValue], [width doubleValue]);
+    UIGraphicsBeginImageContext(newSize);
+    [image drawInRect:CGRectMake(0,0,newSize.width,newSize.height)];
+    UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
+    NSURL *tmpDirURL = [NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES];
+    NSURL *fileURL = [[tmpDirURL URLByAppendingPathComponent:[[NSUUID UUID] UUIDString]] URLByAppendingPathExtension:@"jpeg"];
+    NSData *imageData = UIImageJPEGRepresentation(newImage, 1);
+    [imageData writeToFile:[fileURL path] atomically:YES];
+    if (!self.onDataReturned) {
+        return;
+    }
+    self.onDataReturned(@{
+                          
+                          @"url": [fileURL path]
+                          });
 }
 
 

@@ -9,10 +9,7 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.uimanager.SimpleViewManager;
 import com.facebook.react.uimanager.ThemedReactContext;
-import com.facebook.react.uimanager.ViewProps;
 import com.facebook.react.uimanager.annotations.ReactProp;
-import com.facebook.react.views.image.ImageResizeMode;
-import com.facebook.react.views.image.ReactImageView;
 
 import java.util.Map;
 
@@ -41,15 +38,12 @@ public class RNFilterManager extends SimpleViewManager<RNFilterView> {
 
   @Override
   protected RNFilterView createViewInstance(ThemedReactContext reactContext) {
-    Log.d("React"," View manager createViewInstance:");
     return new RNFilterView(reactContext, mContextModule.getActivity());
 
   }
 
   @ReactProp(name = "src")
   public void setSrc(RNFilterView view, @Nullable String sources) {
-//    Log.d("React:", "source before");
-//    Log.d("React:", String.valueOf( sources ));
     view.setSource(sources);
   }
 
@@ -64,16 +58,6 @@ public class RNFilterManager extends SimpleViewManager<RNFilterView> {
   public void filter(RNFilterView view, @Nullable boolean value) {
     view.setThumbnail(value);
   }
-
-//  @ReactProp(name = "contrast")
-//  public void setContrast(RNFilterView view, @Nullable float progress) {
-//    view.setContrast(progress);
-//  }
-
-//  @ReactProp(name = "brightness")
-//  public void setBrightness(RNFilterView view, @Nullable float progress) {
-//    view.setBrightness(progress);
-//  }
 
 
   @Override
@@ -117,11 +101,12 @@ public class RNFilterManager extends SimpleViewManager<RNFilterView> {
     // This will be called whenever a command is sent from react-native.
     switch (commandId) {
       case COMMAND_CAPTURE_CURRENT_VIEW:
-//                root.snapShot = true;
-//                root.widthImage = args.getInt(1);
-//                root.heightImage = args.getInt(0);
+        root.SaveImage = true;
+        root.widthImage = args.getInt(1);
+        root.heightImage = args.getInt(0);
+        root.requestRender();
         break;
-//                root.requestRender();
+//
       case COMMAND_SET_BRIT:
         Log.d("Brit",String.valueOf(args));
         root.setBrightness(args.getDouble(0));
