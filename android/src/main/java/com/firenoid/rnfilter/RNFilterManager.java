@@ -20,8 +20,10 @@ public class RNFilterManager extends SimpleViewManager<RNFilterView> {
   public static final int COMMAND_SET_BRIT = 2;
   public static final int COMMAND_SET_CONTR = 3;
   public static final int COMMAND_SET_SATUR = 4;
-  public static final int COMMAND_SET_FILTER = 5;
-  public static final int COMMAND_GEN_FILTERS = 6;
+  public static final int COMMAND_SET_BLUR = 5;
+  public static final int COMMAND_SET_VIGN = 6;
+  public static final int COMMAND_SET_FILTER = 7;
+  public static final int COMMAND_GEN_FILTERS = 8;
 
 
   private RNFilterContextModule mContextModule;
@@ -90,10 +92,10 @@ public class RNFilterManager extends SimpleViewManager<RNFilterView> {
             COMMAND_SET_CONTR,
             "setBrightness",
             COMMAND_SET_BRIT,
-            "setFilter",
-            COMMAND_SET_FILTER,
-            "generateFilters",
-            COMMAND_GEN_FILTERS
+            "setBlur",
+            COMMAND_SET_BLUR,
+            "setVignette",
+            COMMAND_SET_VIGN
     );
   }
   @Override
@@ -121,6 +123,12 @@ public class RNFilterManager extends SimpleViewManager<RNFilterView> {
         break;
       case COMMAND_SET_FILTER:
         root.setFilter(args.getDouble(0));
+        break;
+      case COMMAND_SET_BLUR:
+        root.setBlur(args.getDouble(0));
+        break;
+      case COMMAND_SET_VIGN:
+        root.setVignette(args.getDouble(0));
         break;
       case COMMAND_GEN_FILTERS:
 //        root.generateFilters();

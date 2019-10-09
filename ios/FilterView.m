@@ -72,13 +72,13 @@
         inputBrightnessDefault = @0;
         inputContrastDefault = @1;
         inputVignetteDefault  = @0;
-        inputBlurDefault = @0.02;
+        inputBlurDefault = @0;
         
         inputSaturation = @1;
         inputBrightness = @0;
         inputContrast = @1;
         inputVignette  = @1;
-        inputBlur = @0.02;
+        inputBlur = @0;
     }
     
     return self;
@@ -173,10 +173,11 @@
         currentImage = [filter valueForKey:kCIOutputImageKey];
     }
     if(BlurFilter){
-        filter = [CIFilter filterWithName: @"CINoiseReduction"
+        NSLog(@"%@", inputBlur);
+        filter = [CIFilter filterWithName: @"CIGaussianBlur"
                       withInputParameters: @{
                                              @"inputImage"      : currentImage,
-                                             @"inputNoiseLevel" : inputBlur
+                                             @"inputRadius" : inputBlur
                                              }];
         currentImage = [filter valueForKey:kCIOutputImageKey];
     }
