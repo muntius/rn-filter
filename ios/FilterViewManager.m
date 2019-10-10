@@ -120,6 +120,42 @@ RCT_EXPORT_METHOD(
     
 }
 
+
+RCT_EXPORT_METHOD(
+                  setOriginal:(nonnull NSNumber*) reactTag
+                  value:(BOOL*) value ) {
+    
+    [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
+        FilterView *view = (FilterView *)viewRegistry[reactTag];
+        if (!view || ![view isKindOfClass:[FilterView class]]) {
+            RCTLogError(@"Cannot find NativeView with tag #%@", reactTag);
+            return;
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [view setOriginal:value];
+        });
+    }];
+    
+}
+
+
+RCT_EXPORT_METHOD(
+                  setReset:(nonnull NSNumber*) reactTag
+                  ){
+    
+    [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
+        FilterView *view = (FilterView *)viewRegistry[reactTag];
+        if (!view || ![view isKindOfClass:[FilterView class]]) {
+            RCTLogError(@"Cannot find NativeView with tag #%@", reactTag);
+            return;
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [view setReset];
+        });
+    }];
+    
+}
+
 RCT_EXPORT_METHOD(
                   capture:(nonnull NSNumber*) reactTag
                   width:(nonnull NSNumber*) width

@@ -23,10 +23,14 @@ export default class FilterView extends PureComponent {
     ).Commands.setVignette
     this.blur = UIManager.getViewManagerConfig('RNFilter').Commands.setBlur
     this.capture = UIManager.getViewManagerConfig('RNFilter').Commands.capture
+    this.original = UIManager.getViewManagerConfig('RNFilter').Commands.setOriginal
+    this.reset = UIManager.getViewManagerConfig('RNFilter').Commands.setReset
     this.setSaturation = this._setSaturation.bind(this)
     this.setContrast = this._setContrast.bind(this)
     this.setBrightness = this._setBrightness.bind(this)
     this.setVignette = this._setVignette.bind(this)
+    this.setOriginal = this._setOriginal.bind(this)
+    this.setReset = this._setReset.bind(this)
     this.setBlur = this._setBlur.bind(this)
     this.takeShot = this._takeShot.bind(this)
     this.reqPromise = null
@@ -63,6 +67,13 @@ export default class FilterView extends PureComponent {
 
   _setBlur (value) {
     UIManager.dispatchViewManagerCommand(this.viewHandle, this.blur, [value])
+  }
+
+  _setOriginal (value) {
+    UIManager.dispatchViewManagerCommand(this.viewHandle, this.original, [value])
+  }
+  _setReset (value) {
+    UIManager.dispatchViewManagerCommand(this.viewHandle, this.reset, [])
   }
 
   _takeShot (media) {

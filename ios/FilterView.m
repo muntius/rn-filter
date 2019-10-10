@@ -37,7 +37,8 @@
     BOOL SatFilter;
     BOOL BritFilter;
     BOOL ContFilter;
-
+    BOOL previewOriginal;
+    
     BOOL BlurFilter;
     BOOL VignetteFilter;
     CALayer *filterLayer;
@@ -162,35 +163,38 @@
     
     CIFilter *filter;
     CIImage *currentImage = editImageCGImage;
-    if(SatFilter || BritFilter || ContFilter){
-        filter = [CIFilter filterWithName: @"CIColorControls"
-                      withInputParameters: @{
-                                             @"inputImage"      : editImageCGImage,
-                                             @"inputSaturation" : inputSaturation,
-                                             @"inputBrightness" : inputBrightness,
-                                             @"inputContrast"   : inputContrast
-                                             }];
-        currentImage = [filter valueForKey:kCIOutputImageKey];
+    if(!previewOriginal){
+        if(SatFilter || BritFilter || ContFilter){
+            filter = [CIFilter filterWithName: @"CIColorControls"
+                          withInputParameters: @{
+                                                 @"inputImage"      : editImageCGImage,
+                                                 @"inputSaturation" : inputSaturation,
+                                                 @"inputBrightness" : inputBrightness,
+                                                 @"inputContrast"   : inputContrast
+                                                 }];
+            currentImage = [filter valueForKey:kCIOutputImageKey];
+        }
+        if(BlurFilter){
+            NSLog(@"%@", inputBlur);
+            filter = [CIFilter filterWithName: @"CIGaussianBlur"
+                          withInputParameters: @{
+                                                 @"inputImage"      : currentImage,
+                                                 @"inputRadius" : inputBlur
+                                                 }];
+            currentImage = [filter valueForKey:kCIOutputImageKey];
+        }
+        if(VignetteFilter){
+            filter = [CIFilter filterWithName: @"CIVignette"
+                          withInputParameters: @{
+                                                 @"inputImage"      : currentImage,
+                                                 @"inputIntensity" : @1,
+                                                 @"inputRadius"   : inputVignette
+                                                 }];
+            currentImage = [filter valueForKey:kCIOutputImageKey];
+        }
+        
     }
-    if(BlurFilter){
-        NSLog(@"%@", inputBlur);
-        filter = [CIFilter filterWithName: @"CIGaussianBlur"
-                      withInputParameters: @{
-                                             @"inputImage"      : currentImage,
-                                             @"inputRadius" : inputBlur
-                                             }];
-        currentImage = [filter valueForKey:kCIOutputImageKey];
-    }
-    if(VignetteFilter){
-        filter = [CIFilter filterWithName: @"CIVignette"
-                      withInputParameters: @{
-                                             @"inputImage"      : currentImage,
-                                             @"inputIntensity" : @1,
-                                             @"inputRadius"   : inputVignette
-                                             }];
-        currentImage = [filter valueForKey:kCIOutputImageKey];
-    }
-   
+    
     [_viewForImage bindDrawable];
     if (_eaglContext != [EAGLContext currentContext]) {
         [EAGLContext setCurrentContext:_eaglContext];
@@ -212,17 +216,19 @@
 -(void) setSaturation:(NSNumber *)value{
     inputSaturation = value;
     if(![value isEqualToNumber:inputSaturationDefault]){
-
-         SatFilter= true;
+        
+        SatFilter= true;
     } else {
-         SatFilter= false;
+        SatFilter= false;
     }
     [self UpdateColorInputs:@"SBC"];
 }
+
+
 -(void) setBrightness:(NSNumber *)value{
     inputBrightness = value;
     if(![value isEqualToNumber:inputBrightnessDefault]){
-
+        
         BritFilter= true;
     } else {
         BritFilter= false;
@@ -233,9 +239,9 @@
 -(void) setContrast:(NSNumber *)value{
     inputContrast = value;
     if(![value isEqualToNumber:inputContrastDefault]){
-         ContFilter= true;
+        ContFilter= true;
     } else {
-         ContFilter= false;
+        ContFilter= false;
     }
     [self UpdateColorInputs:@"SBC"];
 }
@@ -260,6 +266,24 @@
     }
     [self UpdateColorInputs:@"Vignette"];
 }
+
+-(void) setOriginal:(BOOL *)value{
+    previewOriginal = value;
+    
+    [self UpdateColorInputs:@"previewOriginal"];
+}
+
+-(void) setReset{
+    previewOriginal = BritFilter = SatFilter = ContFilter = BlurFilter = VignetteFilter = false;
+    inputBlur = inputBlurDefault;
+    inputSaturation = inputSaturationDefault;
+    inputContrast = inputContrastDefault;
+    inputBrightness = inputBrightnessDefault;
+    inputVignette = inputVignetteDefault;
+    [self UpdateColorInputs:@"Original"];
+}
+
+
 
 -(void) takeShot: (NSNumber *)width height:(NSNumber *)height {
     UIGraphicsBeginImageContextWithOptions(_viewForImage.bounds.size, YES, 0);

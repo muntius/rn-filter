@@ -28,6 +28,8 @@
 -(void) setContrast:(NSNumber *)value;
 -(void) setVignette:(nonnull NSNumber *)value;
 -(void) setBlur:(nonnull NSNumber *)value;
+-(void) setOriginal:(BOOL *)value;
+-(void) setReset;
 -(void) takeShot:(nonnull NSNumber *)width height:(nonnull NSNumber *)height;
 
 

@@ -50,6 +50,7 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
     public boolean isInitialized;
     public boolean EnableContrastSaturationBrightness;
     public boolean isThumbnail;
+    public boolean previewOriginal;
 
 
     public boolean BOOL_LoadTexture = false;
@@ -81,6 +82,11 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
     public float mBrightnessValue = 1f;
     public float mBlurValue = 1f;
     public float mVignetteValue = 1f;
+    public float mSaturationDefaultValue = 1f;
+    public float mContrastDefaultValue = 1f;
+    public float mBrightnessDefaultValue = 1f;
+    public float mBlurDefaultValue = 0f;
+    public float mVignetteDefaultValue = 0f;
     public int widthImage;
     public int heightImage;
 
@@ -197,7 +203,7 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
 
     public void setBlur(double value) {
         shallRenderImage = true;
-        BlurFilter= value != 0.0;
+        BlurFilter = value != 0.0;
         mBlurValue = (float) value;
         this.requestRender();
     }
@@ -209,7 +215,21 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
         this.requestRender();
     }
 
-    public void setFilter(double value) {
+    public void setOriginal(boolean value) {
+        shallRenderImage = true;
+        previewOriginal = value;
+        this.requestRender();
+    }
+
+    public void setReset() {
+        shallRenderImage = true;
+        mSaturationValue = mSaturationDefaultValue;
+        mContrastValue = mContrastDefaultValue;
+        mBrightnessValue = mBrightnessDefaultValue;
+        mBlurValue = mBlurDefaultValue;
+        mVignetteValue = mVignetteDefaultValue;
+        previewOriginal = SFilter = BFilter = CFilter = BlurFilter = VignetteFilter = false;
+        this.requestRender();
     }
 
     public void setThumbnail(boolean value) {
@@ -300,43 +320,44 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
         /////////////////////////////  /////////////////////////////
         /////////////////////////////  /////////////////////////////
         /////////////////////////////  /////////////////////////////
-        if(SFilter || BFilter|| CFilter) {
-            mIndex++;
-            this.Set(hToFilterTexture[mIndex]);
+        if (!previewOriginal) {
+            if (SFilter || BFilter || CFilter) {
+                mIndex++;
+                this.Set(hToFilterTexture[mIndex]);
 
 //
-            GLES20.glUseProgram(mShaderProgramContrastSaturationBrightness);
-            setVSParams(mShaderProgramContrastSaturationBrightness);
-            setShaderParamPhoto(mShaderProgramContrastSaturationBrightness, mCurrentTexture);
+                GLES20.glUseProgram(mShaderProgramContrastSaturationBrightness);
+                setVSParams(mShaderProgramContrastSaturationBrightness);
+                setShaderParamPhoto(mShaderProgramContrastSaturationBrightness, mCurrentTexture);
 
 //
-            int sat = GLES20.glGetUniformLocation(mShaderProgramContrastSaturationBrightness, "Saturation");
-            int br = GLES20.glGetUniformLocation(mShaderProgramContrastSaturationBrightness, "Brightness");
-            int ctr = GLES20.glGetUniformLocation(mShaderProgramContrastSaturationBrightness, "Contrast");
-            GLES20.glUniform1f(sat, mSaturationValue);
-            GLES20.glUniform1f(br, mBrightnessValue);
-            GLES20.glUniform1f(ctr, mContrastValue);
-            drawquad();
+                int sat = GLES20.glGetUniformLocation(mShaderProgramContrastSaturationBrightness, "Saturation");
+                int br = GLES20.glGetUniformLocation(mShaderProgramContrastSaturationBrightness, "Brightness");
+                int ctr = GLES20.glGetUniformLocation(mShaderProgramContrastSaturationBrightness, "Contrast");
+                GLES20.glUniform1f(sat, mSaturationValue);
+                GLES20.glUniform1f(br, mBrightnessValue);
+                GLES20.glUniform1f(ctr, mContrastValue);
+                drawquad();
 
-            mCurrentTexture = hToFilterTexture[mIndex];
-        }
+                mCurrentTexture = hToFilterTexture[mIndex];
+            }
 
-        if(BlurFilter){
-            mIndex++;
-            this.Set(hToFilterTexture[mIndex]);
-            GLES20.glUseProgram(hShaderProgramGaussianBlur);
-            setVSParams(hShaderProgramGaussianBlur);
-            setShaderParamPhoto(hShaderProgramGaussianBlur, mCurrentTexture);
-            SetBlurEffectParameters(1.0f / (float) mImageWidth, 0);
-            drawquad();
+            if (BlurFilter) {
+                mIndex++;
+                this.Set(hToFilterTexture[mIndex]);
+                GLES20.glUseProgram(hShaderProgramGaussianBlur);
+                setVSParams(hShaderProgramGaussianBlur);
+                setShaderParamPhoto(hShaderProgramGaussianBlur, mCurrentTexture);
+                SetBlurEffectParameters(1.0f / (float) mImageWidth, 0);
+                drawquad();
 
-            mCurrentTexture = hToFilterTexture[mIndex];
+                mCurrentTexture = hToFilterTexture[mIndex];
 
-        }
+            }
 
-        if(VignetteFilter){
-            mIndex++;
-            this.Set(hToFilterTexture[mIndex]);
+            if (VignetteFilter) {
+                mIndex++;
+                this.Set(hToFilterTexture[mIndex]);
 
 
                 GLES20.glUseProgram(hShaderProgramToneMapping);
@@ -348,11 +369,10 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
 
                 drawquad();
 
-            mCurrentTexture = hToFilterTexture[mIndex];
+                mCurrentTexture = hToFilterTexture[mIndex];
 
+            }
         }
-
-
 
         /////////////////////////////  /////////////////////////////
         /////////////////////////////  /////////////////////////////
@@ -377,9 +397,7 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
     }
 
 
-
-    void SetBlurEffectParameters(float dx, float dy)
-    {
+    void SetBlurEffectParameters(float dx, float dy) {
         //GLES20.glUseProgram(hShaderProgramGaussianBlur);
         int sox = GLES20.glGetUniformLocation(hShaderProgramGaussianBlur, "SampleOffsetsX");
         int soy = GLES20.glGetUniformLocation(hShaderProgramGaussianBlur, "SampleOffsetsY");
@@ -396,8 +414,7 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
 
         float totalWeights = sampleWeights[0];
 
-        for (int i = 0; i < sampleCount / 2; i++)
-        {
+        for (int i = 0; i < sampleCount / 2; i++) {
             float weight = ComputeGaussian(i + 1, mBlurValue);
 
             sampleWeights[i * 2 + 1] = weight;
@@ -413,8 +430,7 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
             sampleOffsetsY[i * 2 + 2] = -dy * sampleOffset;
         }
 
-        for (int i = 0; i < sampleWeights.length; i++)
-        {
+        for (int i = 0; i < sampleWeights.length; i++) {
             sampleWeights[i] /= totalWeights;
         }
 
@@ -422,9 +438,9 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
         GLES20.glUniform1fv(soy, sampleCount, sampleOffsetsY, 0);
         GLES20.glUniform1fv(wei, sampleCount, sampleWeights, 0);
     }
-    float ComputeGaussian(float n, float theta)
-    {
-        return (float)((1.0 / Math.sqrt(2 * Math.PI * theta)) *
+
+    float ComputeGaussian(float n, float theta) {
+        return (float) ((1.0 / Math.sqrt(2 * Math.PI * theta)) *
                 Math.exp(-(n * n) / (2 * theta * theta)));
     }
 
@@ -565,7 +581,6 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
                         "    gl_FragColor = c;" +
                         "}";
         hShaderProgramGaussianBlur = createprogram(generalreverseVS, gaussianBlur_FS);
-
 
 
         //ToneMapping+
