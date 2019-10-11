@@ -187,7 +187,7 @@
             filter = [CIFilter filterWithName: @"CIVignette"
                           withInputParameters: @{
                                                  @"inputImage"      : currentImage,
-                                                 @"inputIntensity" : @1,
+                                                 @"inputIntensity" : @2,
                                                  @"inputRadius"   : inputVignette
                                                  }];
             currentImage = [filter valueForKey:kCIOutputImageKey];
