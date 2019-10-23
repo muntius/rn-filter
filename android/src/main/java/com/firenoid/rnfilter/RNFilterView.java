@@ -69,7 +69,7 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
     private ShortBuffer IB;
     private FloatBuffer TC;
 
-    public int[] hToFilterTexture = new int[3];
+    public int[] hToFilterTexture = new int[4];
     public int mCurrentTexture = 0;
     public int mIndex = 0;
     public boolean SFilter = false;
@@ -714,12 +714,13 @@ public class RNFilterView extends GLSurfaceView implements GLSurfaceView.Rendere
         this.hToFilterTexture = loadTexture(bmp);
         generateframebuffer(hToFilterTexture[1]);
         generateframebuffer(hToFilterTexture[2]);
+        generateframebuffer(hToFilterTexture[3]);
 
     }
 
     private int[] loadTexture(Bitmap bitmap) {
-        final int[] textureHandle = new int[3];
-        GLES20.glGenTextures(3, textureHandle, 0);
+        final int[] textureHandle = new int[4];
+        GLES20.glGenTextures(4, textureHandle, 0);
         if (textureHandle[0] == 0) throw (new RuntimeException("error generating t"));
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureHandle[0]);
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
