@@ -1,7 +1,6 @@
-
 package com.firenoid.rnfilter;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.util.Log;
 
 import com.facebook.common.internal.ImmutableMap;
@@ -27,8 +26,6 @@ public class RNFilterManager extends SimpleViewManager<RNFilterView> {
   public final int COMMAND_SET_RESET = 7;
   public final int COMMAND_SET_ORIG = 9;
 
-
-
   private RNFilterContextModule mContextModule;
 
   public RNFilterManager(ReactApplicationContext reactContext) {
@@ -40,11 +37,9 @@ public class RNFilterManager extends SimpleViewManager<RNFilterView> {
     return REACT_CLASS;
   }
 
-
   @Override
   protected RNFilterView createViewInstance(ThemedReactContext reactContext) {
     return new RNFilterView(reactContext, mContextModule.getActivity());
-
   }
 
   @ReactProp(name = "src")
@@ -52,12 +47,10 @@ public class RNFilterManager extends SimpleViewManager<RNFilterView> {
     view.setSource(sources);
   }
 
-
   @ReactProp(name = "thumbnail")
   public void filter(RNFilterView view, @Nullable boolean value) {
     view.setThumbnail(value);
   }
-
 
   @Override
   public @javax.annotation.Nullable
@@ -71,8 +64,6 @@ public class RNFilterManager extends SimpleViewManager<RNFilterView> {
             MapBuilder.of("registrationName", "onThumbsReturned")
     );
   }
-
-
 
   @javax.annotation.Nullable
   @Override
@@ -92,6 +83,7 @@ public class RNFilterManager extends SimpleViewManager<RNFilterView> {
     ImmutableMap immutableMap = ImmutableMap.copyOf(map);
     return immutableMap;
   }
+
   @Override
   public void receiveCommand(final RNFilterView root, int commandId, @javax.annotation.Nullable ReadableArray args) {
     // This will be called whenever a command is sent from react-native.
@@ -102,15 +94,12 @@ public class RNFilterManager extends SimpleViewManager<RNFilterView> {
         root.heightImage = args.getInt(0);
         root.requestRender();
         break;
-//
       case COMMAND_SET_BRIT:
         Log.d("Brit",String.valueOf(args));
         root.setBrightness(args.getDouble(0));
-
         break;
       case COMMAND_SET_CONTR:
         root.setContrast(args.getDouble(0));
-
         break;
       case COMMAND_SET_SATUR:
         root.setSaturation(args.getDouble(0));
@@ -124,11 +113,10 @@ public class RNFilterManager extends SimpleViewManager<RNFilterView> {
       case COMMAND_SET_ORIG:
         root.setOriginal(args.getBoolean(0));
         break;
-        case COMMAND_SET_RESET:
+      case COMMAND_SET_RESET:
         root.setReset();
         break;
     }
   }
-
 
 }

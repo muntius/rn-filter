@@ -13,8 +13,7 @@
   "author": "Bachir Khiati",
   "license": "Rights to use only for the Author and Muntius Oy",
   "peerDependencies": {
-    "react-native": "^0.41.2",
-    "react-native-windows": "0.41.0-rc.1"
-
+    "react-native": "^0.70.2",
+    "react-native-windows": "^0.70.2"
   }
 }
