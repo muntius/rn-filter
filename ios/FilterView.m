@@ -85,6 +85,21 @@
     return self;
 }
 
+- (void)dealloc
+{
+    _viewForImage = nil;
+    _cictx = nil;
+    editImageCGImage = nil;
+    editThumbCGImage = nil;
+    resultImage = nil;
+    
+    if ([EAGLContext currentContext] == _eaglContext) {
+        [EAGLContext setCurrentContext:nil];
+    }
+    _eaglContext = nil;
+    
+}
+
 -(void)calculateRects
 {
     self->RectImageView = CGRectMake(0, 0, self.frame.size.width, self.frame.size.height);

@@ -9,11 +9,11 @@ Pod::Spec.new do |s|
   s.description    = package['description']
   s.license        = package['license']
   s.author         = package['author']
-  s.homepage       = 'https://github.com/BachirKhiati/rn-filter'
-  s.source       = { :git => "https://github.com/BachirKhiati/rn-filter.git", :tag => "#{s.version}" }
+  s.homepage       = 'https://github.com/muntius/rn-filter'
+  s.source       = { :git => "https://github.com/muntius/rn-filter.git", :tag => "#{s.version}" }
 
-  s.ios.deployment_target = "9.0"
-  s.tvos.deployment_target = "9.0"
+  s.ios.deployment_target = "12.4"
+  s.tvos.deployment_target = "12.4"
 
   s.subspec "RNFilter" do |ss|
     ss.source_files  = "ios/*.{h,m,swift}"
