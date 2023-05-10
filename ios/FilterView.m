@@ -112,19 +112,7 @@
     NSData * imageData = [[NSData alloc] initWithContentsOfURL: [NSURL URLWithString: imageUrl]];
     UIImage *image = [UIImage imageWithData: imageData];
     self->image = image;
-    UIImage *resizedImage;
-    
-    if (image.size.width > image.size.height) {
-        resizedImage = [image resizedImageByWidth:(int)self.frame.size.width];
-    }
-    else
-    {
-        resizedImage = [image resizedImageByHeight:(int)self.frame.size.width];
-    }
-    NSString *resizeString = [NSString stringWithFormat:@"%ix%i#",(int)self.frame.size.width,(int)self.frame.size.width];
-    UIImage *editResizedImage = [image resizedImage:resizeString];
-    self->editImage = editResizedImage;
-    
+    self->editImage = image;
 }
 
 -(void)setupGLContext
