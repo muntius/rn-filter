@@ -1,19 +1,18 @@
-
 {
-  "name": "rn-filter",
-  "version": "1.0.3",
-  "description": "React native filters",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [
-    "react-native"
-  ],
-  "author": "Bachir Khiati",
-  "license": "Rights to use only for the Author and Muntius Oy",
-  "peerDependencies": {
-    "react-native": "^0.70.2",
-    "react-native-windows": "^0.70.2"
-  }
+	"name": "rn-filter",
+	"version": "1.0.3",
+	"description": "React native filters",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [
+		"react-native"
+	],
+	"author": "Bachir Khiati",
+	"license": "Rights to use only for the Author and Muntius Oy",
+	"peerDependencies": {
+		"react-native": "^0.71.12",
+		"react-native-windows": "^0.71.12"
+	}
 }
